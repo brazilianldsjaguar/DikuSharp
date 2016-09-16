@@ -13,6 +13,7 @@ using DikuSharp.Server.Commands;
 using DikuSharp.Server.Config;
 using DikuSharp.Server.Helps;
 using DikuSharp.Server.Models;
+using DikuSharp.Server.Repositories;
 using Newtonsoft.Json;
 
 namespace DikuSharp.Server
@@ -51,16 +52,17 @@ namespace DikuSharp.Server
         private Mud( )
         {
             Connections = new ConcurrentDictionary<Guid,Connection>();
-            Commands = new List<IMudCommand>( );
             Config = _getMudConfigFromFile( );
+            Repo = new MudRepository();
             GameLoop( );
         }
         #endregion
 
         #region Properties
+        public MudRepository Repo { get; set; }
         public MudConfig Config { get; set; }
         public ConcurrentDictionary<Guid,Connection> Connections { get; private set; }
-        public List<IMudCommand> Commands { get; private set; }
+        public List<CommandMetaData> Commands { get; private set; }
         public List<Area> Areas { get; private set; }
         public List<PlayerAccount> Accounts { get; private set; }
         public List<Help> Helps { get; private set; }
@@ -71,14 +73,18 @@ namespace DikuSharp.Server
             //get things started
             //load up the areas...
             Console.WriteLine("Loading areas...");
-            Areas = Config.LoadAreas( );
+            Areas = Repo.LoadAreas( Config );
 
             Console.WriteLine("Loading accounts...");
-            Accounts = Config.LoadAccounts( );
+            Accounts = Repo.LoadAccounts( Config );
 
             Console.WriteLine("Loading help files...");
-            Helps = Config.LoadHelps( );
+            Helps = Repo.LoadHelps( Config );
+
+            Console.WriteLine("Loading command files...");
+            Commands = Repo.LoadCommands( Config );
         }
+        
         /// <summary>
         /// Adds a connection to the mud
         /// </summary>

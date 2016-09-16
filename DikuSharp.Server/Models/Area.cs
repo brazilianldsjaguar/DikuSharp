@@ -8,10 +8,13 @@ namespace DikuSharp.Server.Models
     {
         [JsonProperty("name")]
         public string Name { get; set; }
-
+        [JsonProperty("minLevel")]
         public int MinLevel { get; set; }
+        [JsonProperty("maxLevel")]
         public int MaxLevel { get; set; }
+        [JsonProperty("id")]
         public int Id { get; set; }
+        [JsonProperty("rooms")]
         public List<Room> Rooms { get; set; }
     }
 }

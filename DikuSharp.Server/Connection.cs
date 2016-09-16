@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DikuSharp.Server.Characters;
+using DikuSharp.Server.Colors;
 
 namespace DikuSharp.Server
 {
@@ -22,6 +23,18 @@ namespace DikuSharp.Server
         public ConnectionStatus ConnectionStatus { get; set; }
 
         public PlayerAccount Account { get; set; }
+
+        /// <summary>
+        /// Gets or sets the current character. Represents the character the account has chosen
+        /// </summary>
+        /// <value>
+        /// The current character.
+        /// </value>
+        public PlayerCharacter CurrentCharacter {
+            get { return _currentCharacter; }
+            set { _currentCharacter = value; _currentCharacter.CurrentConnection = this; }
+        }
+        private PlayerCharacter _currentCharacter;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Connection"/> class.
@@ -46,7 +59,8 @@ namespace DikuSharp.Server
         {
             try
             {
-                _writer.WriteLine( message );
+                var colorMessage = Colorizer.Colorize( message, true );
+                _writer.WriteLine( colorMessage );
             }
             catch( IOException io )
             {
@@ -56,14 +70,7 @@ namespace DikuSharp.Server
 
         public void SendLine( string formatMessage, params object[] arg )
         {
-            try
-            {
-                _writer.WriteLine( formatMessage, arg);
-            }
-            catch( IOException io )
-            {
-                CleanUp();
-            }
+            SendLine( string.Format( formatMessage, arg ) );
         }
 
         private void CleanUp()
@@ -76,7 +83,11 @@ namespace DikuSharp.Server
             try
             {
                 Mud.I.AddConnection( this );
-                
+
+                //Send the welcome message
+                var welcome = Mud.I.Helps.First( h => h.Keywords.ToLower( ).Contains( "welcome" ) );
+                SendLine( welcome.Contents );
+
                 while ( true )
                 {
                     string line = _reader.ReadLine( );

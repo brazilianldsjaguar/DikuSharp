@@ -3,19 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DikuSharp.Server.Models;
 using Newtonsoft.Json;
 
 namespace DikuSharp.Server.Characters
 {
     public class Character
     {
-        [JsonProperty("name")]
+        #region Serializable
+
+        [JsonProperty( "name" )]
         public string Name { get; set; }
-        [JsonProperty("description")]
+        [JsonProperty( "description" )]
         public string Description { get; set; }
-        [JsonProperty("shortDescription")]
+        [JsonProperty( "shortDescription" )]
         public string ShortDescription { get; set; }
-        [JsonProperty("level")]
+        [JsonProperty( "level" )]
         public int Level { get; set; }
+
+        #endregion
+
+        [JsonIgnore]
+        public Room CurrentRoom { get; set; }
     }
 }

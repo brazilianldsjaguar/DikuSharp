@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DikuSharp.Server.Commands;
 using Newtonsoft.Json;
 
 namespace DikuSharp.Server.Config
@@ -24,5 +25,9 @@ namespace DikuSharp.Server.Config
 
         [JsonProperty( "helpFileDirectory" )]
         public string HelpFileDirectory { get; set; }
+        [JsonProperty( "commandDirectory")]
+        public string CommandDirectory { get; set; }
+
+        public List<CommandMetaData> Commands { get; set; }
     }
 }

@@ -9,6 +9,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DikuSharp.Server.Characters;
+using DikuSharp.Server.Commands;
+using DikuSharp.Server.Extensions;
+using Jint;
+using Jint.Native;
+using Jint.Runtime.Interop;
 
 namespace DikuSharp.Server
 {
@@ -58,6 +63,9 @@ namespace DikuSharp.Server
             {
                 connection.Account = account;
                 connection.ConnectionStatus = ConnectionStatus.PutInPassword;
+
+                //prep them for password
+                connection.SendLine( "Enter your password:");
             }
         }
 
@@ -79,55 +87,154 @@ namespace DikuSharp.Server
             else
             {
                 connection.ConnectionStatus = ConnectionStatus.ChooseCharacter;
+                //prep them for character choice:
+                SendCharacterChoices( connection );
             }
         }
 
         public static void ParseCharacterChoice( Connection connection, string line )
         {
-            connection.SendLine( "Choose a character:");
-            connection.SendLine("---------------------------");
-            //generate the choices...
-            Dictionary<int,PlayerCharacter> choices = connection.Account.Characters
-                .OrderBy( c => c.Level )
-                .Select( ( c, i ) => new KeyValuePair<int, PlayerCharacter>( i, c ) )
-                .ToDictionary( kvp => kvp.Key, kvp => kvp.Value );
-            foreach( var choice in choices )
+            Dictionary<int, PlayerCharacter> choices = connection.Account.Characters.GetChoices( );
+            int choice;
+            if ( int.TryParse(line, out choice) && choices.ContainsKey(choice))
             {
-                connection.SendLine($"[{choice.Key}]: {choice.Value.Name}");
+                connection.CurrentCharacter = choices[ choice ];
+                connection.CurrentCharacter.CurrentRoom = Mud.I.Areas.First( ).Rooms.First( );
+                connection.ConnectionStatus = ConnectionStatus.Playing;
             }
-            connection.SendLine("Choice: ");
-            connection.ConnectionStatus = ConnectionStatus.Playing;
+            else
+            {
+                connection.SendLine( "Invalid choice." );
+                SendCharacterChoices( connection );
+            }
         }
 
         public static void ParsePlaying( Connection connection, string line )
         {
-            //TODO: Make this only write lines to connections in the same "room" or "zone" or whatever
-            if ( line.StartsWith( "say " ) )
+            if ( string.IsNullOrWhiteSpace(line))
             {
-                foreach ( var c in Mud.I.Connections.Values.Where( c => c.ConnectionStatus == ConnectionStatus.Playing ) )
-                {
-                    c.SendLine( line.Substring( 4, line.Length - 4 ) );
-                }
+                return;
             }
-            else if ( line.StartsWith( "help ") )
+
+            var split = _getArgsFromInput( line, ' ' );
+            //break out spaces first
+            var cmd = split[ 0 ].ToLower();
+            object[] args = split.Skip( 1 ).Select( s => (object)s ).ToArray();
+
+            //find similar commands
+            var command = Mud.I.Commands.FirstOrDefault( c => c.Name.ToLower( ).StartsWith( cmd ) );
+
+            if ( command == null )
             {
-                string[] args = line.Split( ' ' ).Skip( 1 ).ToArray();
-                var help = Mud.I.Helps.FirstOrDefault( h => h.Keywords.ToLower().Contains( args[ 0 ] ) );
-                if ( help != null )
-                {
-                    connection.SendLine(help.Keywords);
-                    connection.SendLine(help.Contents);
-                }
-                else
-                {
-                    connection.SendLine("Help not found.");
-                }
+                connection.SendLine("Huh?");
             }
             else
             {
-                connection.SendLine( line );
+                try
+                {
+
+                    //do it!
+                    var engine = new Engine();
+                    engine.SetValue( "__log", new Action<object>( Console.WriteLine ) );
+                    engine.SetValue( "HELPS", Mud.I.Helps.ToArray() );
+                    //engine.SetValue( "CONNECTIONS", Mud.I.Connections );
+                    engine.Execute( command.RawJavascript );
+                    var jsCmd = engine.GetValue( command.Name );
+                    var result = jsCmd.Invoke( JsValue.FromObject( engine, connection.CurrentCharacter ), JsValue.FromObject( engine, args ) );
+                    //engine.Invoke( command.Name, connection, args );
+                }
+                catch( Exception ex )
+                {
+                    throw;
+                }
             }
+            //TODO: Make this into a general command interpretter!
+            //if ( line.StartsWith( "say " ) )
+            //{
+            //    foreach ( var c in Mud.I.Connections.Values.Where( c => c.ConnectionStatus == ConnectionStatus.Playing ) )
+            //    {
+            //        c.SendLine( line.Substring( 4, line.Length - 4 ) );
+            //    }
+            //}
+            //else if ( line.StartsWith( "help ") )
+            //{
+            //    string[] args = line.Split( ' ' ).Skip( 1 ).ToArray();
+            //    var help = Mud.I.Helps.FirstOrDefault( h => h.Keywords.ToLower().Contains( args[ 0 ] ) );
+            //    if ( help != null )
+            //    {
+            //        connection.SendLine(help.Keywords);
+            //        connection.SendLine(help.Contents);
+            //    }
+            //    else
+            //    {
+            //        connection.SendLine("Help not found.");
+            //    }
+            //}
+            //else
+            //{
+            //    connection.SendLine( line );
+            //}
         }
         
+        private static List<string> _getArgsFromInput( string stringToSplit, params char[] delimiters )
+        {
+            /*
+             * Parse '' quotes (i.e. cast 'magic missile' <person>) - used for multi-word arguments
+             *
+             * This was adapted from Richard Shepherd's version found here:
+             * http://stackoverflow.com/questions/554013/regular-expression-to-split-on-spaces-unless-in-quotes
+             */
+            List<string> results = new List<string>( );
+
+            bool inQuote = false;
+            StringBuilder currentToken = new StringBuilder( );
+            for ( int index = 0; index < stringToSplit.Length; ++index )
+            {
+                char currentCharacter = stringToSplit[ index ];
+                if ( currentCharacter == '\'' )
+                {
+                    // When we see a ", we need to decide whether we are
+                    // at the start or send of a quoted section...
+                    inQuote = !inQuote;
+                }
+                else if ( delimiters.Contains( currentCharacter ) && inQuote == false )
+                {
+                    // We've come to the end of a token, so we find the token,
+                    // trim it and add it to the collection of results...
+                    string result = currentToken.ToString( ).Trim( );
+                    if ( result != "" )
+                        results.Add( result );
+
+                    // We start a new token...
+                    currentToken = new StringBuilder( );
+                }
+                else
+                {
+                    // We've got a 'normal' character, so we add it to
+                    // the curent token...
+                    currentToken.Append( currentCharacter );
+                }
+            }
+
+            // We've come to the end of the string, so we add the last token...
+            string lastResult = currentToken.ToString( ).Trim( );
+            if ( lastResult != "" )
+                results.Add( lastResult );
+
+            return results;
+        }
+
+        public static void SendCharacterChoices( Connection connection )
+        {
+            connection.SendLine( "Choose a character:" );
+            connection.SendLine( "---------------------------" );
+            //generate the choices...
+            Dictionary<int, PlayerCharacter> choices = connection.Account.Characters.GetChoices( );
+            foreach ( var choice in choices )
+            {
+                connection.SendLine( $"[{choice.Key}]: {choice.Value.Name}" );
+            }
+            connection.SendLine( "Choice: " );
+        }
     }
 }

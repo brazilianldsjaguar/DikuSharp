@@ -9,5 +9,10 @@
         "./classes/mage.json"
     ],
     "accountFileRootDirectory": "accounts",
-    "helpFileDirectory": "helps" 
+    "helpFileDirectory": "helps",
+    "commandDirectory": "commands", 
+    "commands": [
+        { "name":  "help", "fileName": "help.js", "priority":  1 },
+        {"name": "look", "fileName": "look.js", "priority": 1   }
+    ] 
 }
