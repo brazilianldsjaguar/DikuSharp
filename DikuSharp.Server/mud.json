@@ -1,0 +1,13 @@
+﻿{
+    "mudName": "DikuSharp Server",
+    "version": 1.0,
+    "areaFiles": [
+        "./areas/midgaard.json"
+    ],
+    "classFiles": [
+        "./classes/warrior.json",
+        "./classes/mage.json"
+    ],
+    "accountFileRootDirectory": "accounts",
+    "helpFileDirectory": "helps" 
+}

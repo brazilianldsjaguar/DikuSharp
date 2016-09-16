@@ -33,6 +33,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -43,10 +47,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="mud.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Include="Characters\Character.cs" />
+    <Compile Include="Characters\NonPlayerCharacter.cs" />
+    <Compile Include="Characters\PlayerAccount.cs" />
+    <Compile Include="Characters\PlayerCharacter.cs" />
+    <Compile Include="Config\MudConfigExtensions.cs" />
+    <Compile Include="Enums\ConnectionStatus.cs" />
+    <Compile Include="Commands\IMudCommand.cs" />
+    <Compile Include="Helps\Help.cs" />
+    <Compile Include="InputParser.cs" />
+    <Compile Include="Models\Room.cs" />
+    <Compile Include="Models\Area.cs" />
+    <Compile Include="Config\MudConfig.cs" />
     <Compile Include="Mud.cs" />
     <Compile Include="Connection.cs" />
+    <Compile Include="Repositories\MudRepository.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

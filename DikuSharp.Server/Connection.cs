@@ -1,18 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DikuSharp.Server.Characters;
 
 namespace DikuSharp.Server
 {
     //Main entry point for the server
     public class Connection
     {
-        private TcpClient _tcpClient;
+        private NetworkStream _stream;
+        private StreamReader _reader;
+        private StreamWriter _writer;
+
+        public Guid ConnectionId { get; set; }
+        public ConnectionStatus ConnectionStatus { get; set; }
+
+        public PlayerAccount Account { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Connection"/> class.
@@ -20,30 +29,66 @@ namespace DikuSharp.Server
         /// <param name="client">The client.</param>
         public Connection( TcpClient client )
         {
-            _tcpClient = client;
+            _stream = client.GetStream( );
+            _reader = new StreamReader( _stream );
+            _writer = new StreamWriter( _stream );
+            _writer.AutoFlush = true;
+            ConnectionId = Guid.NewGuid( );
+            ConnectionStatus = ConnectionStatus.Connected;
         }
-
+        
         public void Start( )
         {
-            if ( _tcpClient == null )
-            { throw new Exception( "Cannot start Connection without TcpClient" ); }
-
             Task.Run( ( ) => ClientLoop( ) );
         }
 
+        public void SendLine( string message )
+        {
+            try
+            {
+                _writer.WriteLine( message );
+            }
+            catch( IOException io )
+            {
+                CleanUp( );
+            }
+        }
+
+        public void SendLine( string formatMessage, params object[] arg )
+        {
+            try
+            {
+                _writer.WriteLine( formatMessage, arg);
+            }
+            catch( IOException io )
+            {
+                CleanUp();
+            }
+        }
+
+        private void CleanUp()
+        {
+            _stream.Close( );
+            Mud.I.RemoveConnection( this );
+        }
         private void ClientLoop( )
         {
             try
             {
+                Mud.I.AddConnection( this );
+                
                 while ( true )
                 {
-                    Mud.I.AddConnection( this );
+                    string line = _reader.ReadLine( );
+                    
+                    InputParser.Parse(this, line);
                 }
             }
             finally
             {
-
+                CleanUp();
             }
         }
+        
     }
 }

@@ -19,6 +19,8 @@ namespace DikuSharp.Server
         /// <param name="args">The arguments.</param>
         static void Main( string[ ] args )
         {
+            //Start up the Mud...
+            Mud.I.Start( );
             //Listen on the network...
             _listener = new TcpListener(IPAddress.Any, 4000); //TODO: Make this configurable
             _listener.Start();
@@ -28,7 +30,10 @@ namespace DikuSharp.Server
             {
                 Console.WriteLine("Awaiting new connection...");
                 TcpClient client = _listener.AcceptTcpClient( );
-                Console.WriteLine($"Connection: {client.Client.RemoteEndPoint}");
+                var connection = new Connection(client);
+                Console.WriteLine( $"Connection: {client.Client.RemoteEndPoint}" );
+                connection.Start();
+
                 //start the client loop
 
             }
