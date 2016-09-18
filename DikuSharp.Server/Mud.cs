@@ -66,6 +66,8 @@ namespace DikuSharp.Server
         public List<Area> Areas { get; private set; }
         public List<PlayerAccount> Accounts { get; private set; }
         public List<Help> Helps { get; private set; }
+        public Room StartingRoom { get; private set; }
+            
         #endregion
 
         public void Start()
@@ -83,7 +85,13 @@ namespace DikuSharp.Server
 
             Console.WriteLine("Loading command files...");
             Commands = Repo.LoadCommands( Config );
+
+            //Calculate this just once...
+            StartingRoom = Areas.First( a => a.Rooms.Exists( r => r.Vnum == Config.RoomVnumForNewPlayers ) )
+                    .Rooms.First( r => r.Vnum == Config.RoomVnumForNewPlayers );
+            
         }
+    
         
         /// <summary>
         /// Adds a connection to the mud

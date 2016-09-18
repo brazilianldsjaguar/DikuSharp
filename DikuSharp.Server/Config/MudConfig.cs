@@ -14,8 +14,13 @@ namespace DikuSharp.Server.Config
 
         [JsonProperty("version")]
         public float Version { get; set; }
-
-        [JsonProperty("areaFiles")]
+        [JsonProperty("maxLevel")]
+        public int MaxLevel { get; set; }
+        [JsonProperty("levels")]
+        public Dictionary<string, string> Levels { get; set; }
+        [JsonProperty( "roomVnumForNewPlayers" )]
+        public int RoomVnumForNewPlayers { get; set; }
+        [ JsonProperty("areaFiles")]
         public List<string> AreaFiles { get; set; }
 
         [JsonProperty("classFiles")]

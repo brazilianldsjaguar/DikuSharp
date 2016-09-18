@@ -99,7 +99,16 @@ namespace DikuSharp.Server
             if ( int.TryParse(line, out choice) && choices.ContainsKey(choice))
             {
                 connection.CurrentCharacter = choices[ choice ];
-                connection.CurrentCharacter.CurrentRoom = Mud.I.Areas.First( ).Rooms.First( );
+                //find the room they quit in
+                var area = Mud.I.Areas.FirstOrDefault( a => a.Rooms.Exists( r => r.Vnum == connection.CurrentCharacter.CurrentRoomVnum ) );
+                if ( area == null ) { connection.CurrentCharacter.CurrentRoom = Mud.I.StartingRoom; }
+                else {
+                    var room = area.Rooms.FirstOrDefault( r => r.Vnum == connection.CurrentCharacter.CurrentRoomVnum );
+                    if ( room == null ) { connection.CurrentCharacter.CurrentRoom = Mud.I.StartingRoom; }
+                    else { connection.CurrentCharacter.CurrentRoom = room; }
+                }
+
+
                 connection.ConnectionStatus = ConnectionStatus.Playing;
             }
             else
@@ -130,23 +139,15 @@ namespace DikuSharp.Server
             }
             else
             {
-                try
-                {
-
-                    //do it!
-                    var engine = new Engine();
-                    engine.SetValue( "__log", new Action<object>( Console.WriteLine ) );
-                    engine.SetValue( "HELPS", Mud.I.Helps.ToArray() );
-                    //engine.SetValue( "CONNECTIONS", Mud.I.Connections );
-                    engine.Execute( command.RawJavascript );
-                    var jsCmd = engine.GetValue( command.Name );
-                    var result = jsCmd.Invoke( JsValue.FromObject( engine, connection.CurrentCharacter ), JsValue.FromObject( engine, args ) );
-                    //engine.Invoke( command.Name, connection, args );
-                }
-                catch( Exception ex )
-                {
-                    throw;
-                }
+                //do it!
+                var engine = new Engine();
+                engine.SetValue( "__log", new Action<object>( Console.WriteLine ) );
+                engine.SetValue( "HELPS", Mud.I.Helps.ToArray() );
+                //engine.SetValue( "CONNECTIONS", Mud.I.Connections );
+                engine.Execute( command.RawJavascript );
+                var jsCmd = engine.GetValue( command.Name );
+                var result = jsCmd.Invoke( JsValue.FromObject( engine, connection.CurrentCharacter ), JsValue.FromObject( engine, args ) );
+                //engine.Invoke( command.Name, connection, args );
             }
             //TODO: Make this into a general command interpretter!
             //if ( line.StartsWith( "say " ) )

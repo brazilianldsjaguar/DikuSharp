@@ -12,6 +12,19 @@ namespace DikuSharp.Server.Characters
         [JsonIgnore]
         public Connection CurrentConnection { get; set; }
 
+        [JsonProperty("experiencePoints")]
+        public int ExperiencePoints { get; set; }
+
+        /// <summary>
+        /// Gets or sets the xp. Alias for <see cref="ExperiencePoints"/>.
+        /// </summary>
+        /// <value>
+        /// The xp.
+        /// </value>
+        [JsonIgnore]
+        public int Xp { get {  return ExperiencePoints; } set { ExperiencePoints = value; } }
+
+
         /// <summary>
         /// Helper method to send a message to the player via its PC object instead of its connection. Useful inside COMMANDS
         /// </summary>

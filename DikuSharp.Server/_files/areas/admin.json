@@ -1,0 +1,28 @@
+{
+    "name": "Admin vnums",
+    "minLevel": 1,
+    "maxLevel": 1,
+    "id": 1,
+    "vnumMin": 1,
+    "vnumMax": 1000,
+    "rooms": [
+        {
+            "vnum": 1,
+            "name": "{RLimbo{x",
+            "description": "{OThis is Limbo. {oGood day.{x",
+            "exits": {
+                "n": 2
+            }
+        },
+        {
+            "vnum": 2,
+            "name": "Limbo 2",
+            "description": "this is Limbo 2. Bad day.",
+            "exits": {
+                "s": 1
+            }
+        }
+    ],
+    "mobResets": [],
+    "objectResets": []
+}

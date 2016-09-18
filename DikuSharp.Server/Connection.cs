@@ -12,7 +12,9 @@ using DikuSharp.Server.Colors;
 
 namespace DikuSharp.Server
 {
-    //Main entry point for the server
+    /// <summary>
+    /// A client connection to the MUD. Handles all the reading/writing of messages
+    /// </summary>
     public class Connection
     {
         private NetworkStream _stream;
@@ -23,6 +25,7 @@ namespace DikuSharp.Server
         public ConnectionStatus ConnectionStatus { get; set; }
 
         public PlayerAccount Account { get; set; }
+        public bool UseColors { get; set; }
 
         /// <summary>
         /// Gets or sets the current character. Represents the character the account has chosen
@@ -48,6 +51,7 @@ namespace DikuSharp.Server
             _writer.AutoFlush = true;
             ConnectionId = Guid.NewGuid( );
             ConnectionStatus = ConnectionStatus.Connected;
+            UseColors = false;//start false
         }
         
         public void Start( )
@@ -59,10 +63,10 @@ namespace DikuSharp.Server
         {
             try
             {
-                var colorMessage = Colorizer.Colorize( message, true );
+                var colorMessage = Colorizer.Colorize( message, UseColors );
                 _writer.WriteLine( colorMessage );
             }
-            catch( IOException io )
+            catch( IOException )
             {
                 CleanUp( );
             }
@@ -83,6 +87,13 @@ namespace DikuSharp.Server
             try
             {
                 Mud.I.AddConnection( this );
+
+                //Ask for colors!
+                SendLine("Do you want to use ANSI colors? (y/n):");
+                var colorResponse = _reader.ReadLine( );
+                if ( !string.IsNullOrEmpty(colorResponse) && colorResponse.ToLower( ) == "y") { UseColors = true; }
+                //anything else is just no
+                else { UseColors = false; }
 
                 //Send the welcome message
                 var welcome = Mud.I.Helps.First( h => h.Keywords.ToLower( ).Contains( "welcome" ) );
