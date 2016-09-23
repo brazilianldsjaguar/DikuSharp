@@ -17,6 +17,7 @@ namespace DikuSharp.Server.Models
         [JsonProperty( "description" )]
         public string Description { get; set; }
 
+        public Dictionary<string,Exit> Exits { get; set; }
         #endregion
 
         [JsonIgnore]

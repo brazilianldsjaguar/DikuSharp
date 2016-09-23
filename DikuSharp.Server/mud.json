@@ -24,9 +24,25 @@
     ],
     "accountFileRootDirectory": "_files/accounts",
     "helpFileDirectory": "_files/helps",
-    "commandDirectory": "_files/commands", 
+    "commandDirectory": "_files/commands",
     "commands": [
-        { "name":  "help", "fileName": "help.js", "priority":  1 },
-        {"name": "look", "fileName": "look.js", "priority": 1   }
+        {
+            "name": "help",
+            "fileName": "help.js",
+            "level": 0,
+            "priority": 1
+        },
+        {
+            "name": "look",
+            "fileName": "look.js",
+            "level": 0,
+            "priority": 1
+        },
+        {
+            "name": "north",
+            "fileName": "north.js",
+            "level": 0,
+            "priority": 1
+        }
     ] 
 }
