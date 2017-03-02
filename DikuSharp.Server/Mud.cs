@@ -64,6 +64,18 @@ namespace DikuSharp.Server
         public ConcurrentDictionary<Guid,Connection> Connections { get; private set; }
         public List<CommandMetaData> Commands { get; private set; }
         public List<Area> Areas { get; private set; }
+        public List<Room> AllRooms
+        {
+            get
+            {
+                if ( _allRooms == null && Areas != null && Areas.All(a=>a.Rooms != null))
+                {
+                    _allRooms = Areas.SelectMany( a => a.Rooms ).ToList( );
+                }
+                return _allRooms;
+            }
+        }
+        private List<Room> _allRooms = null;
         public List<PlayerAccount> Accounts { get; private set; }
         public List<Help> Helps { get; private set; }
         public Room StartingRoom { get; private set; }

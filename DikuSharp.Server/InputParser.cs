@@ -137,17 +137,31 @@ namespace DikuSharp.Server
             {
                 connection.SendLine("Huh?");
             }
+            else if ( command.Level > connection.CurrentCharacter.Level )
+            {
+                connection.SendLine( "Huh?" );
+            }
             else
             {
-                //do it!
-                var engine = new Engine();
-                engine.SetValue( "__log", new Action<object>( Console.WriteLine ) );
-                engine.SetValue( "HELPS", Mud.I.Helps.ToArray() );
-                //engine.SetValue( "CONNECTIONS", Mud.I.Connections );
-                engine.Execute( command.RawJavascript );
-                var jsCmd = engine.GetValue( command.Name );
-                var result = jsCmd.Invoke( JsValue.FromObject( engine, connection.CurrentCharacter ), JsValue.FromObject( engine, args ) );
-                //engine.Invoke( command.Name, connection, args );
+                try
+                {
+                    //do it!
+                    var engine = new Engine( );
+                    engine.SetValue( "__log", new Action<object>( Console.WriteLine ) );
+                    engine.SetValue( "HELPS", Mud.I.Helps.ToArray( ) );
+                    engine.SetValue( "EXITS", connection.CurrentCharacter.CurrentRoom.Exits.Select( x => new { name = x.Key, vnum = x.Value.DestinationVnum } ).ToArray() );
+                    //engine.SetValue( "CONNECTIONS", Mud.I.Connections );
+                    engine.Execute( command.RawJavascript );
+                    var jsCmd = engine.GetValue( command.Name );
+                    var result = jsCmd.Invoke( JsValue.FromObject( engine, connection.CurrentCharacter ), JsValue.FromObject( engine, args ) );
+                    //engine.Invoke( command.Name, connection, args );
+                }
+                catch( Exception ex )
+                {
+                    throw ex;
+                }
+
+
             }
             //TODO: Make this into a general command interpretter!
             //if ( line.StartsWith( "say " ) )

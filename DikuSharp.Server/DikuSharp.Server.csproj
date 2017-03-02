@@ -67,6 +67,7 @@
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Helps\Help.cs" />
     <Compile Include="InputParser.cs" />
+    <Compile Include="Models\Exit.cs" />
     <Compile Include="Models\Room.cs" />
     <Compile Include="Models\Area.cs" />
     <Compile Include="Config\MudConfig.cs" />
@@ -94,6 +95,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="_files\commands\help.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="_files\commands\north.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="_files\commands\look.js">

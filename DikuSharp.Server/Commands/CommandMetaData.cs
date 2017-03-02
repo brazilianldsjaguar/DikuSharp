@@ -15,6 +15,8 @@ namespace DikuSharp.Server.Commands
         public string FileName { get; set; }
         [JsonProperty("priority")]
         public int Priority { get; set; }
+        [JsonProperty("level")]
+        public int Level { get; set; }
 
         [JsonIgnore]
         public string RawJavascript { get; set; }

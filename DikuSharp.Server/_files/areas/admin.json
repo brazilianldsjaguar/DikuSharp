@@ -11,7 +11,7 @@
             "name": "{RLimbo{x",
             "description": "{OThis is Limbo. {oGood day.{x",
             "exits": {
-                "n": 2
+                "north": {"destinationVnum": 2 }
             }
         },
         {
@@ -19,7 +19,7 @@
             "name": "Limbo 2",
             "description": "this is Limbo 2. Bad day.",
             "exits": {
-                "s": 1
+                "south": { "destinationVnum": 1 }
             }
         }
     ],

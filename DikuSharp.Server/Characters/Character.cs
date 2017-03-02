@@ -33,11 +33,16 @@ namespace DikuSharp.Server.Characters
         [JsonProperty( "maxMovePoints" )]
         public int MaxMovePoints { get; set; }
         [JsonProperty("currentRoomVnum")]
-        public long CurrentRoomVnum { get; set; }
+        public long CurrentRoomVnum
+        {
+            get { return _currentRoomVnum; }
+            set { _currentRoomVnum = value; _currentRoom = Mud.I.AllRooms.First( r => r.Vnum == value ); }
+        }
+        private long _currentRoomVnum;
         #endregion
 
         [JsonIgnore]
-        public Room CurrentRoom { get { return _currentRoom; } set { _currentRoom = value; CurrentRoomVnum = value.Vnum; } }
+        public Room CurrentRoom { get { return _currentRoom; } set { _currentRoom = value; _currentRoomVnum = value.Vnum; } }
         private Room _currentRoom;
 
 
