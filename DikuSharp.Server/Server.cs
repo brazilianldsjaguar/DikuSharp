@@ -29,7 +29,7 @@ namespace DikuSharp.Server
             while( true )
             {
                 Console.WriteLine("Awaiting new connection...");
-                TcpClient client = _listener.AcceptTcpClient( );
+                TcpClient client = _listener.AcceptTcpClientAsync( ).Result;
                 var connection = new Connection(client);
                 Console.WriteLine( $"Connection: {client.Client.RemoteEndPoint}" );
                 connection.Start();

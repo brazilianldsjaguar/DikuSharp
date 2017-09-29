@@ -79,7 +79,7 @@ namespace DikuSharp.Server
 
         private void CleanUp()
         {
-            _stream.Close( );
+            _stream.Dispose();
             Mud.I.RemoveConnection( this );
         }
         private void ClientLoop( )

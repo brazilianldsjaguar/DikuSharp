@@ -54,7 +54,7 @@ namespace DikuSharp.Server
         public static void ParseUsername( Connection connection, string line )
         {
             //First line is their user name
-            var account = Mud.I.Accounts.FirstOrDefault( a => a.Name.Equals( line, StringComparison.InvariantCultureIgnoreCase ) );
+            var account = Mud.I.Accounts.FirstOrDefault( a => a.Name.Equals( line, StringComparison.OrdinalIgnoreCase ) );
             if ( account == null )
             {
                 connection.SendLine( "Account not found, put in a valid account or type new." );
@@ -78,7 +78,7 @@ namespace DikuSharp.Server
             //now convert the hash to a string
             string password = string.Join( "", result.Select( b => b.ToString( "x2" ) ) );
             //now compare them
-            if ( !password.Equals( connection.Account.Password, StringComparison.InvariantCulture))
+            if ( !password.Equals( connection.Account.Password, StringComparison.Ordinal))
             {
                 connection.SendLine("Invalid password/username combination");
                 connection.Account = null;
