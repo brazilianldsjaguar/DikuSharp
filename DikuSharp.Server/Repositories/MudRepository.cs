@@ -20,6 +20,7 @@ namespace DikuSharp.Server.Repositories
             {
                 var rawJson = File.ReadAllText( areaFile );
                 var area = JsonConvert.DeserializeObject<Area>( rawJson );
+                area.Rooms.ForEach(r => r.Exits = r.Exits.OrderBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value));
                 areas.Add( area );
             }
             return areas;

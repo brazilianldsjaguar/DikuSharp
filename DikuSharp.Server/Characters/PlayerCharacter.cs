@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Jint.Runtime.Interop;
+using Jint.Native;
 
 namespace DikuSharp.Server.Characters
 {

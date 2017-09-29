@@ -25,24 +25,68 @@
     "accountFileRootDirectory": "_files/accounts",
     "helpFileDirectory": "_files/helps",
     "commandDirectory": "_files/commands",
-    "commands": [
-        {
-            "name": "help",
-            "fileName": "help.js",
-            "level": 0,
-            "priority": 1
-        },
-        {
-            "name": "look",
-            "fileName": "look.js",
-            "level": 0,
-            "priority": 1
-        },
-        {
-            "name": "north",
-            "fileName": "north.js",
-            "level": 0,
-            "priority": 1
-        }
-    ] 
+  "commands": [
+    {
+      "name": "help",
+      "fileName": "help.js",
+      "level": 0,
+      "priority": 1
+    },
+    {
+      "name": "look",
+      "fileName": "look.js",
+      "level": 0,
+      "priority": 1
+    },
+    {
+      "name": "north",
+      "fileName": "dirs/north.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "south",
+      "fileName": "dirs/south.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "east",
+      "fileName": "dirs/east.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "west",
+      "fileName": "dirs/west.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "up",
+      "fileName": "dirs/up.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "down",
+      "fileName": "dirs/down.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "say",
+      "fileName": "say.js",
+      "level": 0,
+      "priority": 1,
+      "aliases": [ "'" ],
+      "preserveQuotes": true
+    }
+  ] 
 }

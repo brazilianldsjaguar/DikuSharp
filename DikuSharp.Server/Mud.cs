@@ -15,6 +15,7 @@ using DikuSharp.Server.Helps;
 using DikuSharp.Server.Models;
 using DikuSharp.Server.Repositories;
 using Newtonsoft.Json;
+using Jint;
 
 namespace DikuSharp.Server
 {
@@ -78,6 +79,7 @@ namespace DikuSharp.Server
         private List<Room> _allRooms = null;
         public List<PlayerAccount> Accounts { get; private set; }
         public List<Help> Helps { get; private set; }
+        public Engine Engine { get; private set; }
         public Room StartingRoom { get; private set; }
             
         #endregion
@@ -97,6 +99,15 @@ namespace DikuSharp.Server
 
             Console.WriteLine("Loading command files...");
             Commands = Repo.LoadCommands( Config );
+
+            Console.WriteLine("Prepping JInt environment...");
+            Engine = new Engine(cfg => {
+                cfg.DebugMode();
+               // cfg.AddObjectConverter(new PlayerCharacterConverter()); //From Character to JsValue
+                });
+            Engine.SetValue("HELPS", Helps.ToArray());
+            Engine.SetValue("DO_COMMAND", new Action<PlayerCharacter, string>(InputParser.ParsePlaying));
+            Engine.SetValue("__log", new Action<object>(Console.WriteLine));
 
             //Calculate this just once...
             StartingRoom = Areas.First( a => a.Rooms.Exists( r => r.Vnum == Config.RoomVnumForNewPlayers ) )
@@ -121,18 +132,23 @@ namespace DikuSharp.Server
         }
 
         #region Game Loop
+        private Random _random = new Random();
+        private Timer _timer;
+        private void _timerCallback(object state)
+        {
+            DateTime runTime = DateTime.Now;
+            //AutoResetEvent ae = (AutoResetEvent)state;
+            var playingConnections = Connections.Values.Where(c => c.ConnectionStatus == ConnectionStatus.Playing);
+            foreach (var c in playingConnections)
+            {
+                c.SendLine($"A big haboob blows by... {runTime.ToString("o")}");
+            }
+            _timer.Change(_random.Next(3600, 3600 * 2), 0);
+        }
 
         private void GameLoop()
         {
-            Timer timer = new Timer((state) =>
-            {
-                var playingConnections = Connections.Values.Where( c => c.ConnectionStatus == ConnectionStatus.Playing );
-                foreach ( var c in playingConnections )
-                {
-                    c.SendLine( "A big haboob blows by..." );
-                }
-            }, new { t = false }, 0, 3600 );
-
+            _timer = new Timer(_timerCallback, null, 0, _random.Next(3600, 4800));
         }
 
         #endregion
