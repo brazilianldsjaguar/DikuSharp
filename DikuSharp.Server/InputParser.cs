@@ -126,12 +126,12 @@ namespace DikuSharp.Server
             }
         }
 
-        public static void ParsePlaying( PlayerCharacter character, string line )
+        public static void ParsePlaying( Connection connection, string line )
         {
-            ParsePlaying(character.CurrentConnection, line);
+            ParsePlaying(connection.CurrentCharacter, line);
         }
 
-        public static void ParsePlaying( Connection connection, string line )
+        public static void ParsePlaying(PlayerCharacter character, string line )
         {
             if ( string.IsNullOrWhiteSpace(line))
             {
@@ -148,11 +148,11 @@ namespace DikuSharp.Server
 
             if ( command == null )
             {
-                connection.SendLine("Huh?");
+                character.SendLine("Huh?");
             }
-            else if ( command.Level > connection.CurrentCharacter.Level )
+            else if ( command.Level > character.Level )
             {
-                connection.SendLine( "Huh?" );
+                character.SendLine( "Huh?" );
             }
             else
             {
@@ -165,10 +165,14 @@ namespace DikuSharp.Server
                     var engine = Mud.I.Engine;                    
                     engine.Execute( command.RawJavascript );
                     var jsCmd = engine.GetValue( command.Name );
-                    var arg1 = JsValue.FromObject(engine, connection.CurrentCharacter);
+                    var arg1 = JsValue.FromObject(engine, character);
                     var arg2 = JsValue.FromObject(engine, args);
                     var result = jsCmd.Invoke(arg1, arg2);
 
+                    //assuming this was all successful, show the prompt
+                    //tack the prompt onto the end of this.
+                    var prompt = Prompt.ParseTokens(character.Prompt ?? Prompt.PROMPT_DEFAULT, character);
+                    character.SendLine(prompt);
                     //TODO
                     //Do something better here - maybe something returned from the command to signal if another will need to be executed?
                     //or another way to force another command to happen

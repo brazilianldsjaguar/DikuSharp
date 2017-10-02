@@ -1,31 +1,44 @@
 ﻿{
-    "mudName": "DikuSharp Server",
-    "version": 1.0,
-    "maxLevel": 11,
-    "levels": {
-        "1": 1000,
-        "2": 2000,
-        "3": 3000,
-        "4": 4000,
-        "5": 5000,
-        "6": 6000,
-        "7": 7000,
-        "8": 8000,
-        "9": 9000,
-        "10": 10000
-    },
-    "roomVnumForNewPlayers": 1,
-    "areaFiles": [
-        "./_files/areas/admin.json"
-    ],
-    "classFiles": [
-        "./_files/classes/warrior.json",
-        "./_files/classes/mage.json"
-    ],
-    "accountFileRootDirectory": "_files/accounts",
-    "helpFileDirectory": "_files/helps",
-    "commandDirectory": "_files/commands",
+  "mudName": "DikuSharp Server",
+  "version": 1.0,
+  "portNumber": 4000,
+  "maxLevel": 100,
+  "levels": {
+    "1": 1000,
+    "2": 2000,
+    "3": 3000,
+    "4": 4000,
+    "5": 5000,
+    "6": 6000,
+    "7": 7000,
+    "8": 8000,
+    "9": 9000,
+    "10": 10000
+  },
+  "roomVnumForNewPlayers": 1,
+  "areaFiles": [
+    "./_files/areas/admin.json"
+  ],
+  "classFiles": [
+    "./_files/classes/warrior.json",
+    "./_files/classes/mage.json"
+  ],
+  "accountFileRootDirectory": "_files/accounts",
+  "helpFileDirectory": "_files/helps",
+  "commandDirectory": "_files/commands",
   "commands": [
+    /*****************
+     *     ADMIN     *
+     ****************/
+    {
+      "name": "restart",
+      "fileName": "admin/restart.js",
+      "level": 1000,
+      "priority": 1
+    },
+    /*****************
+     *    COMMON     *
+     *****************/
     {
       "name": "help",
       "fileName": "help.js",
@@ -38,6 +51,10 @@
       "level": 0,
       "priority": 1
     },
+
+    /*****************
+     *   DIRECTIONS  *
+     *****************/
     {
       "name": "north",
       "fileName": "dirs/north.js",
@@ -80,13 +97,25 @@
       "priority": 1,
       "commandType": "Exit"
     },
+
+    /*****************
+     * Communication *
+     *****************/
     {
       "name": "say",
-      "fileName": "say.js",
+      "fileName": "communication/say.js",
       "level": 0,
       "priority": 1,
       "aliases": [ "'" ],
       "preserveQuotes": true
+    },
+    {
+      "name": "ooc",
+      "fileName": "communication/ooc.js",
+      "level": 0,
+      "priority": 1,
+      "aliases": [ "]" ],
+      "preserveQuotes": true
     }
-  ] 
+  ]
 }

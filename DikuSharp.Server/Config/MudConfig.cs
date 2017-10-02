@@ -11,7 +11,8 @@ namespace DikuSharp.Server.Config
     {
         [JsonProperty("mudName")]
         public string MudName { get; set; }
-
+        [JsonProperty("portNumber")]
+        public int PortNumber { get; set; }
         [JsonProperty("version")]
         public float Version { get; set; }
         [JsonProperty("maxLevel")]

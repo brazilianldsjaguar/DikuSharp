@@ -20,6 +20,9 @@ namespace DikuSharp.Server
         private NetworkStream _stream;
         private StreamReader _reader;
         private StreamWriter _writer;
+        //these act like 'buffers'
+        private string inputBuffer;
+        private string outputBuffer;
 
         public Guid ConnectionId { get; set; }
         public ConnectionStatus ConnectionStatus { get; set; }
@@ -48,7 +51,6 @@ namespace DikuSharp.Server
             _stream = client.GetStream( );
             _reader = new StreamReader( _stream );
             _writer = new StreamWriter( _stream );
-            _writer.AutoFlush = true;
             ConnectionId = Guid.NewGuid( );
             ConnectionStatus = ConnectionStatus.Connected;
             UseColors = false;//start false
@@ -59,17 +61,14 @@ namespace DikuSharp.Server
             Task.Run( ( ) => ClientLoop( ) );
         }
 
+        /// <summary>
+        /// Saves a line to the internal output buffer
+        /// </summary>
+        /// <param name="message"></param>
         public void SendLine( string message )
         {
-            try
-            {
-                var colorMessage = Colorizer.Colorize( message, UseColors );
-                _writer.WriteLine( colorMessage );
-            }
-            catch( IOException )
-            {
-                CleanUp( );
-            }
+            var colorMessage = Colorizer.Colorize( message, UseColors );
+            outputBuffer += colorMessage;
         }
 
         public void SendLine( string formatMessage, params object[] arg )
@@ -77,11 +76,34 @@ namespace DikuSharp.Server
             SendLine( string.Format( formatMessage, arg ) );
         }
 
+        /// <summary>
+        /// Used in game loop to assign input to buffer
+        /// </summary>
+        public void Read()
+        {
+            inputBuffer = _reader.ReadLine();
+        }
+
+        /// <summary>
+        /// Used in game loop to write output buffer to client
+        /// </summary>
+        public void Write()
+        {
+            _writer.WriteLine(outputBuffer);
+            _writer.Flush();
+        }
+
+        [Obsolete]
+        /// This would/should be handled by gameloop
         private void CleanUp()
         {
             _stream.Dispose();
-            Mud.I.RemoveConnection( this );
+            Mud.I.RemoveConnection(this);
         }
+
+        [Obsolete]
+        /// This code is moved to the game loop - connections will handle adding and removing things from their input/output buffers, but that's it.
+        /// What shows up on the first connection is/should be handled by game loop
         private void ClientLoop( )
         {
             try

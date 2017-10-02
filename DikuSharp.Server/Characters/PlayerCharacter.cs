@@ -16,6 +16,8 @@ namespace DikuSharp.Server.Characters
 
         [JsonProperty("experiencePoints")]
         public int ExperiencePoints { get; set; }
+        [JsonProperty("prompt")]
+        public Prompt Prompt { get; set; }
 
         /// <summary>
         /// Gets or sets the xp. Alias for <see cref="ExperiencePoints"/>.

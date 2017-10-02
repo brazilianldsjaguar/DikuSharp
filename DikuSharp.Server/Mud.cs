@@ -53,9 +53,7 @@ namespace DikuSharp.Server
         private Mud( )
         {
             Connections = new ConcurrentDictionary<Guid,Connection>();
-            Config = _getMudConfigFromFile( );
             Repo = new MudRepository();
-            GameLoop( );
         }
         #endregion
 
@@ -84,8 +82,12 @@ namespace DikuSharp.Server
             
         #endregion
 
-        public void Start()
+        public void StartServer()
         {
+            //load the config first...
+            Config = _getMudConfigFromFile();
+
+
             //get things started
             //load up the areas...
             Console.WriteLine("Loading areas...");
@@ -108,6 +110,7 @@ namespace DikuSharp.Server
             Engine.SetValue("HELPS", Helps.ToArray());
             Engine.SetValue("DO_COMMAND", new Action<PlayerCharacter, string>(InputParser.ParsePlaying));
             Engine.SetValue("__log", new Action<object>(Console.WriteLine));
+            Engine.SetValue("ADMIN_RESTART", new Action(StartServer));
 
             //Calculate this just once...
             StartingRoom = Areas.First( a => a.Rooms.Exists( r => r.Vnum == Config.RoomVnumForNewPlayers ) )
@@ -141,14 +144,43 @@ namespace DikuSharp.Server
             var playingConnections = Connections.Values.Where(c => c.ConnectionStatus == ConnectionStatus.Playing);
             foreach (var c in playingConnections)
             {
-                c.SendLine($"A big haboob blows by... {runTime.ToString("o")}");
+                var ch = c.CurrentCharacter;
+                var prompt = Prompt.ParseTokens(ch.Prompt ?? Prompt.PROMPT_DEFAULT, ch);
+                c.SendLine(prompt);
             }
             _timer.Change(_random.Next(3600, 3600 * 2), 0);
         }
 
-        private void GameLoop()
+        /// <summary>
+        /// Official starting point of the game.
+        /// </summary>
+        /// <param name="listener"></param>
+        public void StartGame(TcpListener listener)
         {
-            _timer = new Timer(_timerCallback, null, 0, _random.Next(3600, 4800));
+            GameLoop(listener);
+        }
+
+        private void GameLoop(TcpListener listener)
+        {
+            //_timer = new Timer(_timerCallback, null, 0, _random.Next(3600, 4800));
+            bool mudRunning = true;
+            while (mudRunning)
+            {
+                var client = listener.AcceptTcpClientAsync().Result;                
+                Connections.TryAdd(Guid.NewGuid(), new Connection(client));
+
+                //inputs
+                foreach( Connection connection in Connections.Values )
+                {
+                    connection.Read();
+                }
+
+                //outputs
+                foreach(Connection connection in Connections.Values)
+                {
+                    connection.Write();
+                }
+            }
         }
 
         #endregion
