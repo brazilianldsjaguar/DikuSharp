@@ -38,5 +38,10 @@ namespace DikuSharp.Server.Characters
             CurrentConnection.SendLine( message );
         }
 
+        public void SendFormatLine( string formatMessage, params object[] args)
+        {
+            CurrentConnection.SendLine(formatMessage, true, args);
+        }
+
     }
 }

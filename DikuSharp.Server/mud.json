@@ -51,6 +51,12 @@
       "level": 0,
       "priority": 1
     },
+    {
+      "name": "who",
+      "fileName": "who.js",
+      "level": 0,
+      "priority": 1
+    },
 
     /*****************
      *   DIRECTIONS  *

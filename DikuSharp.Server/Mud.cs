@@ -79,7 +79,9 @@ namespace DikuSharp.Server
         public List<Help> Helps { get; private set; }
         public Engine Engine { get; private set; }
         public Room StartingRoom { get; private set; }
-            
+        public PlayerCharacter[] AllPlayers {  get { return Connections.Select(c => c.Value.CurrentCharacter).ToArray(); } }
+
+        private Task<TcpClient> holderClientTask;
         #endregion
 
         public void StartServer()
@@ -111,6 +113,7 @@ namespace DikuSharp.Server
             Engine.SetValue("DO_COMMAND", new Action<PlayerCharacter, string>(InputParser.ParsePlaying));
             Engine.SetValue("__log", new Action<object>(Console.WriteLine));
             Engine.SetValue("ADMIN_RESTART", new Action(StartServer));
+            Engine.SetValue("MUD", this);
 
             //Calculate this just once...
             StartingRoom = Areas.First( a => a.Rooms.Exists( r => r.Vnum == Config.RoomVnumForNewPlayers ) )
@@ -135,51 +138,61 @@ namespace DikuSharp.Server
         }
 
         #region Game Loop
-        private Random _random = new Random();
-        private Timer _timer;
-        private void _timerCallback(object state)
-        {
-            DateTime runTime = DateTime.Now;
-            //AutoResetEvent ae = (AutoResetEvent)state;
-            var playingConnections = Connections.Values.Where(c => c.ConnectionStatus == ConnectionStatus.Playing);
-            foreach (var c in playingConnections)
-            {
-                var ch = c.CurrentCharacter;
-                var prompt = Prompt.ParseTokens(ch.Prompt ?? Prompt.PROMPT_DEFAULT, ch);
-                c.SendLine(prompt);
-            }
-            _timer.Change(_random.Next(3600, 3600 * 2), 0);
-        }
-
         /// <summary>
         /// Official starting point of the game.
         /// </summary>
         /// <param name="listener"></param>
-        public void StartGame(TcpListener listener)
+        public async Task StartGame(TcpListener listener)
         {
-            GameLoop(listener);
+            await GameLoop(listener);
         }
 
-        private void GameLoop(TcpListener listener)
+        private Task GameLoop(TcpListener listener)
         {
-            //_timer = new Timer(_timerCallback, null, 0, _random.Next(3600, 4800));
             bool mudRunning = true;
-            while (mudRunning)
+            
+            try
             {
-                var client = listener.AcceptTcpClientAsync().Result;                
-                Connections.TryAdd(Guid.NewGuid(), new Connection(client));
-
-                //inputs
-                foreach( Connection connection in Connections.Values )
+                while (mudRunning)
                 {
-                    connection.Read();
+                    HandleNewClient(listener);
+
+                    foreach (var conn in Mud.I.Connections.Values)
+                    {
+                        conn.Read();
+                        InputParser.Parse(conn);
+                    }
+
+                    foreach (var conn in Mud.I.Connections.Values)
+                    {
+                        OutputParser.Parse(conn);
+                        conn.Write();
+                    }
                 }
 
-                //outputs
-                foreach(Connection connection in Connections.Values)
-                {
-                    connection.Write();
-                }
+                return Task.CompletedTask;
+            }
+            catch( Exception ex)
+            {
+                return Task.FromException(ex);
+            }
+        }
+
+        private void HandleNewClient(TcpListener listener)
+        {
+            if ( holderClientTask == null )
+            {
+                holderClientTask = listener.AcceptTcpClientAsync();
+            }
+            
+            if ( holderClientTask.IsCompleted )
+            {
+                var connection = new Connection(holderClientTask.Result);
+                Mud.I.AddConnection(connection);
+                connection.SendWelcomeMessage();
+
+                //listen for a new one
+                holderClientTask = listener.AcceptTcpClientAsync();
             }
         }
 

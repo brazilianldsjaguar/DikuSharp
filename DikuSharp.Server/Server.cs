@@ -25,20 +25,10 @@ namespace DikuSharp.Server
             _listener = new TcpListener(IPAddress.Any, Mud.I.Config.PortNumber);
             _listener.Start();
 
-            Mud.I.StartGame(_listener);
-            ////handle new connections
-            //while( true )
-            //{
-            //    Console.WriteLine("Awaiting new connection...");
-            //    _listener.A
-            //    TcpClient client = _listener.AcceptTcpClientAsync( ).Result;
-            //    var connection = new Connection(client);
-            //    Console.WriteLine( $"Connection: {client.Client.RemoteEndPoint}" );
-            //    //connection.Start();
-
-            //    //start the client loop
-
-            //}
+            Task.Run(async () =>
+            {
+                await Mud.I.StartGame(_listener);
+            }).GetAwaiter().GetResult();
         }
     }
 }

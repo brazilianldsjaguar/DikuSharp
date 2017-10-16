@@ -20,8 +20,9 @@
             return Current;
         }
 
-        public static string ParseTokens(string formatString, PlayerCharacter ch)
+        public static string ParsePrompt(PlayerCharacter ch)
         {
+            string formatString = ch.Prompt ?? Prompt.PROMPT_DEFAULT;
             return formatString.Replace(HP_TOKEN, ch.Hp.ToString())
                 .Replace(MAXHP_TOKEN, ch.MaxHitPoints.ToString())
                 .Replace(MP_TOKEN, ch.Mp.ToString())
@@ -29,7 +30,8 @@
                 .Replace(MV_TOKEN, ch.Mv.ToString())
                 .Replace(MAXMV_TOKEN, ch.MaxMovePoints.ToString())
                 ;
-        }
+            //add more tokens above
+        }        
 
         public override bool Equals(object obj)
         {
