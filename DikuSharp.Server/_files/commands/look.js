@@ -2,9 +2,14 @@ function look(ch, args) {
     if ( args.length > 0 ) {
         ch.SendLine("Not implemented yet...");
     } else {
-        ch.SendLine(ch.CurrentRoom.Name);
-        ch.SendLine(ch.CurrentRoom.Description);
-        ch.SendLine("[Exits]");
+        var roomName = ch.CurrentRoom.Name;
+        if (roomName[0] != '{') {
+            roomName = '{C' + roomName;
+        }
+        ch.SendLine(roomName);
+        ch.SendLine("  " + ch.CurrentRoom.Description);
+        ch.SendLine("");
+        ch.SendLine("{W[{DExits{W]");
 
         var exitEnumerator = ch.CurrentRoom.Exits.GetEnumerator();
         var exitString = '';

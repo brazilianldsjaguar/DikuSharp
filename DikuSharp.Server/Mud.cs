@@ -82,7 +82,12 @@ namespace DikuSharp.Server
         public PlayerCharacter[] AllPlayers {  get { return Connections.Select(c => c.Value.CurrentCharacter).ToArray(); } }
 
         private Task<TcpClient> holderClientTask;
+        private Random tickRandom;
         #endregion
+
+        const int PULSE_PER_SECOND = 4;
+        const int PULSE_TICK = 30 * PULSE_PER_SECOND;
+        const int PULSE_TRACK = 40 * PULSE_PER_SECOND;
 
         public void StartServer()
         {
@@ -150,6 +155,10 @@ namespace DikuSharp.Server
         private Task GameLoop(TcpListener listener)
         {
             bool mudRunning = true;
+
+            DateTime lastTime = DateTime.Now;
+
+            tickRandom = new Random();
             
             try
             {
@@ -163,11 +172,35 @@ namespace DikuSharp.Server
                         InputParser.Parse(conn);
                     }
 
+                    Update();
+
                     foreach (var conn in Mud.I.Connections.Values)
                     {
                         OutputParser.Parse(conn);
                         conn.Write();
                     }
+
+                    //synchornize with the clock
+                    DateTime now = DateTime.Now;
+                    int msDelta = lastTime.Millisecond - now.Millisecond + 1000 / PULSE_PER_SECOND;
+                    int secDelta = lastTime.Second - now.Second;
+
+                    while(msDelta < 0)
+                    {
+                        msDelta += 1000;
+                        secDelta -= 1;
+                    }
+                    while(msDelta >= 1000)
+                    {
+                        msDelta -= 1000;
+                        secDelta += 1;
+                    }
+                    if (secDelta > 0 || (secDelta == 0 && msDelta > 0))
+                    {
+                        Thread.Sleep(new TimeSpan(0, 0, 0, secDelta, msDelta));
+                    }
+
+                    lastTime = DateTime.Now;
                 }
 
                 return Task.CompletedTask;
@@ -196,6 +229,13 @@ namespace DikuSharp.Server
             }
         }
 
+        /// <summary>
+        /// Main method to update mobs, rooms, objs, fighting, etc.
+        /// </summary>
+        private void Update()
+        {
+
+        }
         #endregion
 
         #region Reading from files
