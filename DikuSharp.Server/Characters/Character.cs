@@ -7,11 +7,17 @@ using DikuSharp.Server.Models;
 using Newtonsoft.Json;
 using Jint.Runtime.Interop;
 using Jint.Native;
+using DikuSharp.Server.Events;
 
 namespace DikuSharp.Server.Characters
 {
-    public class Character
+    public class Character : IEventContainer
     {
+        public Character()
+        {
+            Events = new List<MudEvent>();
+        }
+
         #region Serializable
 
         [JsonProperty( "name" )]
@@ -44,6 +50,10 @@ namespace DikuSharp.Server.Characters
         public int Intelligence { get; set; }
         [JsonProperty("charisma")]
         public int Charisma { get; set; }
+
+        //events
+        [JsonIgnore]
+        public IList<MudEvent> Events { get; }
 
         [JsonProperty("currentRoomVnum")]
         public long CurrentRoomVnum

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using DikuSharp.Server.Characters;
 using Newtonsoft.Json;
+using DikuSharp.Server.Events;
+using DikuSharp.Server.Enums;
 
 namespace DikuSharp.Server.Models
 {
-    public class Room
+    public class Room : IEventContainer
     {
         #region Serializable
 
@@ -16,6 +18,9 @@ namespace DikuSharp.Server.Models
         public string Name { get; set; }
         [JsonProperty( "description" )]
         public string Description { get; set; }
+        [JsonProperty("resets")]
+        public List<Reset> Resets { get; set; }
+
 
         public Dictionary<string,Exit> Exits { get; set; }
         #endregion
@@ -24,6 +29,7 @@ namespace DikuSharp.Server.Models
         {
             Players = new List<PlayerCharacter>();
             Mobs = new List<NonPlayerCharacter>();
+            Events = new List<MudEvent>();
         }
 
         [JsonIgnore]
@@ -40,7 +46,10 @@ namespace DikuSharp.Server.Models
                 return players.Concat( mobs ).ToList( );
             }
         }
-        
+
+        [JsonIgnore]
+        public IList<MudEvent> Events { get; }
+
         public void AddCharacter(Character character)
         {
             if ( character is PlayerCharacter ) { Players.Add(character as PlayerCharacter); }
@@ -53,5 +62,19 @@ namespace DikuSharp.Server.Models
             else if (character is NonPlayerCharacter) { Mobs.Remove(character as NonPlayerCharacter); }
         }
 
+        /// <summary>
+        /// Main code to reset a room's contents
+        /// </summary>
+        public void Reset()
+        {
+            foreach( var reset in Resets )
+            {
+                if ( reset.ResetType == ResetType.Mobile )
+                {
+                    NonPlayerCharacter mob = new NonPlayerCharacter() { ShortDescription = "Test mob is here." };
+                    this.AddCharacter(mob);
+                }
+            }
+        }
     }
 }

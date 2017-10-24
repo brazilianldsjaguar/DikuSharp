@@ -16,6 +16,7 @@ using DikuSharp.Server.Models;
 using DikuSharp.Server.Repositories;
 using Newtonsoft.Json;
 using Jint;
+using DikuSharp.Server.Events;
 
 namespace DikuSharp.Server
 {
@@ -54,6 +55,7 @@ namespace DikuSharp.Server
         {
             Connections = new ConcurrentDictionary<Guid,Connection>();
             Repo = new MudRepository();
+            EventManager = new EventManager();
         }
         #endregion
 
@@ -81,11 +83,20 @@ namespace DikuSharp.Server
         public Room StartingRoom { get; private set; }
         public PlayerCharacter[] AllPlayers {  get { return Connections.Select(c => c.Value.CurrentCharacter).ToArray(); } }
 
-        private Task<TcpClient> holderClientTask;
+        /// <summary>
+        /// Core event manager for the MUD.
+        /// </summary>
+        public EventManager EventManager { get; }
+        /// <summary>
+        /// Alias for EventManager property.
+        /// </summary>
+        public EventManager Events => EventManager; //alias for the manager
+
+        private Task<TcpClient> newClientTask;
         private Random tickRandom;
         #endregion
 
-        const int PULSE_PER_SECOND = 4;
+        public const int PULSE_PER_SECOND = 4;
         const int PULSE_TICK = 30 * PULSE_PER_SECOND;
         const int PULSE_TRACK = 40 * PULSE_PER_SECOND;
 
@@ -119,6 +130,9 @@ namespace DikuSharp.Server
             Engine.SetValue("__log", new Action<object>(Console.WriteLine));
             Engine.SetValue("ADMIN_RESTART", new Action(StartServer));
             Engine.SetValue("MUD", this);
+
+            Console.WriteLine("Enqueing core events...");
+            EventManager.Initialize();
 
             //Calculate this just once...
             StartingRoom = Areas.First( a => a.Rooms.Exists( r => r.Vnum == Config.RoomVnumForNewPlayers ) )
@@ -159,7 +173,7 @@ namespace DikuSharp.Server
             DateTime lastTime = DateTime.Now;
 
             tickRandom = new Random();
-            
+
             try
             {
                 while (mudRunning)
@@ -172,7 +186,10 @@ namespace DikuSharp.Server
                         //Clean up
                         foreach (var conn in Mud.I.Connections.Values)
                         {
-                            if (conn.)
+                            if (!conn.IsConnected)
+                            {
+                                Mud.I.RemoveConnection(conn);
+                            }
                         }
 
                         //Input
@@ -183,7 +200,7 @@ namespace DikuSharp.Server
                         }
 
                         //Autonomous game stuff
-                        Update();
+                        Events.Heartbeat();
 
                         //Output
                         foreach (var conn in Mud.I.Connections.Values)
@@ -230,34 +247,20 @@ namespace DikuSharp.Server
 
         private void HandleNewClient(TcpListener listener)
         {
-            if ( holderClientTask == null )
+            if ( newClientTask == null )
             {
-                holderClientTask = listener.AcceptTcpClientAsync();
+                newClientTask = listener.AcceptTcpClientAsync();
             }
             
-            if ( holderClientTask.IsCompleted )
+            if ( newClientTask.IsCompleted )
             {
-                var connection = new Connection(holderClientTask.Result);
+                var connection = new Connection(newClientTask.Result);
                 Mud.I.AddConnection(connection);
                 connection.SendWelcomeMessage();
 
                 //listen for a new one
-                holderClientTask = listener.AcceptTcpClientAsync();
+                newClientTask = listener.AcceptTcpClientAsync();
             }
-        }
-
-        /// <summary>
-        /// Main method to update mobs, rooms, objs, fighting, etc.
-        /// </summary>
-        private void Update()
-        {
-            //foreach( var area in Areas )
-            //{
-            //    foreach( var room in area.Rooms )
-            //    {
-            //        foreach( var mob in room.)
-            //    }
-            //}
         }
         #endregion
 

@@ -9,20 +9,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using DikuSharp.Server.Characters;
 using DikuSharp.Server.Colors;
+using DikuSharp.Server.Events;
 
 namespace DikuSharp.Server
 {
     /// <summary>
     /// A client connection to the MUD. Handles all the reading/writing of messages
     /// </summary>
-    public class Connection
+    public class Connection : IEventContainer
     {
+        private TcpClient _client;
         private NetworkStream _stream;
         private StreamReader _reader;
         private StreamWriter _writer;
         //these act like 'buffers'
         private string inputBuffer;
         private Task<string> inputTask;
+        
         private string outputBuffer;
         private Task outputTask;
 
@@ -31,6 +34,7 @@ namespace DikuSharp.Server
 
         public PlayerAccount Account { get; set; }
         public bool UseColors { get; set; }
+        public IList<MudEvent> Events { get; }
 
         /// <summary>
         /// Gets or sets the current character. Represents the character the account has chosen
@@ -43,8 +47,9 @@ namespace DikuSharp.Server
             set { _currentCharacter = value; _currentCharacter.CurrentConnection = this; }
         }
 
-        public string InputBuffer { get => inputBuffer; }
-        public string OutputBuffer { get => outputBuffer; }
+        public string InputBuffer => inputBuffer;
+        public string OutputBuffer => outputBuffer;
+        public bool IsConnected => _client.Connected;
 
         private PlayerCharacter _currentCharacter;
 
@@ -54,7 +59,8 @@ namespace DikuSharp.Server
         /// <param name="client">The client.</param>
         public Connection( TcpClient client )
         {
-            _stream = client.GetStream( );
+            _client = client;
+            _stream = _client.GetStream( );
             _reader = new StreamReader( _stream );
             _writer = new StreamWriter( _stream );
             ConnectionId = Guid.NewGuid( );
@@ -63,6 +69,8 @@ namespace DikuSharp.Server
 
             //starts the input task - will complete when the user has typed something in.
             inputTask = _reader.ReadLineAsync();
+
+            Events = new List<MudEvent>();
         }
         
         /// <summary>

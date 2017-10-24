@@ -1,10 +1,10 @@
 {
-    "name": "Admin vnums",
-    "minLevel": 1,
-    "maxLevel": 1,
-    "id": 1,
-    "vnumMin": 1,
-    "vnumMax": 1000,
+  "name": "Admin vnums",
+  "minLevel": 1,
+  "maxLevel": 1,
+  "id": 1,
+  "vnumMin": 1,
+  "vnumMax": 1000,
   "rooms": [
     {
       "vnum": 1,
@@ -13,7 +13,13 @@
       "exits": {
         "north": { "destinationVnum": 2 },
         "east": { "destinationVnum": 4 }
-      }
+      },
+      "resets": [
+        {
+          "repopulate": true,
+          "resetType": "Mobile"
+        }
+      ]
     },
     {
       "vnum": 2,
@@ -22,7 +28,8 @@
       "exits": {
         "east": { "destinationVnum": 3 },
         "south": { "destinationVnum": 1 }
-      }
+      },
+      "resets": []
     },
     {
       "vnum": 3,
@@ -31,7 +38,8 @@
       "exits": {
         "west": { "destinationVnum": 2 },
         "south": { "destinationVnum": 4 }
-      }
+      },
+      "resets": []
     },
     {
       "vnum": 4,
@@ -41,7 +49,8 @@
         "up": { "destinationVnum": 5 },
         "north": { "destinationVnum": 3 },
         "west": { "destinationVnum": 1 }
-      }
+      },
+      "resets": []
     },
     {
       "vnum": 5,
@@ -49,9 +58,8 @@
       "description": "this is Limbo 4. Bad day.",
       "exits": {
         "down": { "destinationVnum": 4 }
-      }
-    },
-  ],
-      "mobResets": [],
-      "objectResets": []
+      },
+      "resets": []
     }
+  ]
+}
