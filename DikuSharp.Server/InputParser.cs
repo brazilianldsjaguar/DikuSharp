@@ -185,15 +185,7 @@ namespace DikuSharp.Server
                     var jsCmd = engine.GetValue( command.Name );
                     var arg1 = JsValue.FromObject(engine, character);
                     var arg2 = JsValue.FromObject(engine, args);
-                    var result = jsCmd.Invoke(arg1, arg2);
-                    
-                    //TODO
-                    //Do something better here - maybe something returned from the command to signal if another will need to be executed?
-                    //or another way to force another command to happen
-                    //if (command.CommandType == CommandType.Exit)
-                    //{
-                    //    ParsePlaying(connection, "look");
-                    //}
+                    var result = jsCmd.Invoke(arg1, arg2);                    
                 }
                 catch( Exception ex )
                 {
@@ -201,33 +193,7 @@ namespace DikuSharp.Server
                 }
 
 
-            }
-            //TODO: Make this into a general command interpretter!
-            //if ( line.StartsWith( "say " ) )
-            //{
-            //    foreach ( var c in Mud.I.Connections.Values.Where( c => c.ConnectionStatus == ConnectionStatus.Playing ) )
-            //    {
-            //        c.SendLine( line.Substring( 4, line.Length - 4 ) );
-            //    }
-            //}
-            //else if ( line.StartsWith( "help ") )
-            //{
-            //    string[] args = line.Split( ' ' ).Skip( 1 ).ToArray();
-            //    var help = Mud.I.Helps.FirstOrDefault( h => h.Keywords.ToLower().Contains( args[ 0 ] ) );
-            //    if ( help != null )
-            //    {
-            //        connection.SendLine(help.Keywords);
-            //        connection.SendLine(help.Contents);
-            //    }
-            //    else
-            //    {
-            //        connection.SendLine("Help not found.");
-            //    }
-            //}
-            //else
-            //{
-            //    connection.SendLine( line );
-            //}
+            }            
         }
         
         private static Tuple<string, string> _getCommandAndArgsFromInput(string line)

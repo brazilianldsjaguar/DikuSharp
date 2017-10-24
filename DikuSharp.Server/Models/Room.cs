@@ -71,7 +71,7 @@ namespace DikuSharp.Server.Models
             {
                 if ( reset.ResetType == ResetType.Mobile )
                 {
-                    NonPlayerCharacter mob = new NonPlayerCharacter() { ShortDescription = "Test mob is here." };
+                    NonPlayerCharacter mob = new NonPlayerCharacter() { Name = "test mob", ShortDescription = "Test mob is here.", Description = "This test mob looks great." };
                     this.AddCharacter(mob);
                 }
             }

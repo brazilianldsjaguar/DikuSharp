@@ -48,9 +48,10 @@ namespace DikuSharp.Server.Events
             {
                 e = new MudEvent
                 {
+                    Func = AreaReset,
                     EventType = EventType.AreaReset
                 };
-                AddEvent(e, area, rand.Next(1, 10));
+                AddEvent(e, area, rand.Next(1, 10)); //reset all areas within the next 10 heartbeats (virtually instantly at startup)
             }
         }
 
