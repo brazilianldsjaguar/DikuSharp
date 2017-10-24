@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DikuSharp.Server", "DikuSharp.Server\DikuSharp.Server.csproj", "{E6CECF97-FF28-4129-9B64-635F325C29DC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DikuSharp.Server", "DikuSharp.Server\DikuSharp.Server.csproj", "{3E791A06-DB25-4234-AF45-54B7BB482F9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,12 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E6CECF97-FF28-4129-9B64-635F325C29DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E6CECF97-FF28-4129-9B64-635F325C29DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E6CECF97-FF28-4129-9B64-635F325C29DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E6CECF97-FF28-4129-9B64-635F325C29DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E791A06-DB25-4234-AF45-54B7BB482F9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E791A06-DB25-4234-AF45-54B7BB482F9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E791A06-DB25-4234-AF45-54B7BB482F9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E791A06-DB25-4234-AF45-54B7BB482F9B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F806647F-4028-426B-B958-61F2DB89A3BB}
 	EndGlobalSection
 EndGlobal

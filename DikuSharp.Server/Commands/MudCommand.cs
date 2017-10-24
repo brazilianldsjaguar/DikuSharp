@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DikuSharp.Server
+namespace DikuSharp.Server.Commands
 {
-    class Program
+    public class Look : IMudCommand
     {
-        static void Main( string[ ] args )
+        public void Do()
         {
+
         }
     }
 }

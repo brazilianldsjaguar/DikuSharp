@@ -1,0 +1,57 @@
+{
+    "name": "Admin vnums",
+    "minLevel": 1,
+    "maxLevel": 1,
+    "id": 1,
+    "vnumMin": 1,
+    "vnumMax": 1000,
+  "rooms": [
+    {
+      "vnum": 1,
+      "name": "{RLimbo{x",
+      "description": "{OThis is Limbo. {oGood day.{x",
+      "exits": {
+        "north": { "destinationVnum": 2 },
+        "east": { "destinationVnum": 4 }
+      }
+    },
+    {
+      "vnum": 2,
+      "name": "Limbo 2",
+      "description": "this is Limbo 2. Bad day.",
+      "exits": {
+        "east": { "destinationVnum": 3 },
+        "south": { "destinationVnum": 1 }
+      }
+    },
+    {
+      "vnum": 3,
+      "name": "Limbo 3",
+      "description": "this is Limbo 3. Bad day.",
+      "exits": {
+        "west": { "destinationVnum": 2 },
+        "south": { "destinationVnum": 4 }
+      }
+    },
+    {
+      "vnum": 4,
+      "name": "Limbo 4",
+      "description": "this is Limbo 4. Bad day.",
+      "exits": {
+        "up": { "destinationVnum": 5 },
+        "north": { "destinationVnum": 3 },
+        "west": { "destinationVnum": 1 }
+      }
+    },
+    {
+      "vnum": 5,
+      "name": "Limbo 5",
+      "description": "this is Limbo 4. Bad day.",
+      "exits": {
+        "down": { "destinationVnum": 4 }
+      }
+    },
+  ],
+      "mobResets": [],
+      "objectResets": []
+    }
