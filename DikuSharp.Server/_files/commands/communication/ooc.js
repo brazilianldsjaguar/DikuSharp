@@ -5,8 +5,8 @@ function ooc(ch, args) {
     }
     else
     {
-        for (var i = 0; i < ch.CurrentRoom.Players.Count; i++) {
-            var player = ch.CurrentRoom.Players[i];
+        for (var i = 0; i < MUD.AllPlayers.length; i++) {
+            var player = MUD.AllPlayers[i];
             if (player.Name === ch.Name) { player.SendLine("{WYou ooc, '{C"+ args.join(' ') +"{W'{x"); }
             else { player.SendLine("{W"+ ch.Name + " oocs '{C" + args.join(' ') + "{W'{x"); }
 

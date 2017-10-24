@@ -22,7 +22,9 @@ namespace DikuSharp.Server
         private StreamWriter _writer;
         //these act like 'buffers'
         private string inputBuffer;
+        private Task<string> inputTask;
         private string outputBuffer;
+        private Task outputTask;
 
         public Guid ConnectionId { get; set; }
         public ConnectionStatus ConnectionStatus { get; set; }
@@ -40,6 +42,10 @@ namespace DikuSharp.Server
             get { return _currentCharacter; }
             set { _currentCharacter = value; _currentCharacter.CurrentConnection = this; }
         }
+
+        public string InputBuffer { get => inputBuffer; }
+        public string OutputBuffer { get => outputBuffer; }
+
         private PlayerCharacter _currentCharacter;
 
         /// <summary>
@@ -54,26 +60,30 @@ namespace DikuSharp.Server
             ConnectionId = Guid.NewGuid( );
             ConnectionStatus = ConnectionStatus.Connected;
             UseColors = false;//start false
+
+            //starts the input task - will complete when the user has typed something in.
+            inputTask = _reader.ReadLineAsync();
         }
         
-        public void Start( )
-        {
-            Task.Run( ( ) => ClientLoop( ) );
-        }
-
         /// <summary>
         /// Saves a line to the internal output buffer
         /// </summary>
         /// <param name="message"></param>
-        public void SendLine( string message )
+        public void SendLine( string message, bool sendNewLine = true )
         {
             var colorMessage = Colorizer.Colorize( message, UseColors );
             outputBuffer += colorMessage;
+            if ( sendNewLine ) { outputBuffer += "\r\n"; }
         }
 
-        public void SendLine( string formatMessage, params object[] arg )
+        /// <summary>
+        /// Saves a formated line to the internal output buffer.
+        /// </summary>
+        /// <param name="formatMessage"></param>
+        /// <param name="arg"></param>
+        public void SendLine( string formatMessage, bool sendNewLine, params object[] arg )
         {
-            SendLine( string.Format( formatMessage, arg ) );
+            SendLine( string.Format( formatMessage, arg ), sendNewLine);
         }
 
         /// <summary>
@@ -81,57 +91,64 @@ namespace DikuSharp.Server
         /// </summary>
         public void Read()
         {
-            inputBuffer = _reader.ReadLine();
+            try {
+                if (inputTask.IsCompleted)
+                {
+                    //they've typed something in, so grab it and listen again
+                    inputBuffer = inputTask.Result;
+                    inputTask = _reader.ReadLineAsync();
+                }
+                else
+                {
+                    //null this out so we make sure we never repeat a command
+                    inputBuffer = null;
+                }
+            }
+            catch(IOException io)
+            {
+                //if this failed we'll just assume the client needs to be removed
+                Console.WriteLine(io.Message);
+                Mud.I.RemoveConnection(this);
+            }
+            catch (Exception) { throw; } //throw everything else
+            
         }
-
+        
         /// <summary>
         /// Used in game loop to write output buffer to client
         /// </summary>
         public void Write()
         {
-            _writer.WriteLine(outputBuffer);
-            _writer.Flush();
+            if (string.IsNullOrEmpty(outputBuffer)) { return; }
+
+            if (outputTask == null)
+            {
+                outputTask = _writer.WriteLineAsync(outputBuffer);
+            }
+
+            if ( outputTask.IsCompleted )
+            {
+                _writer.Flush();
+
+                //clear the buffer
+                outputBuffer = string.Empty;
+                outputTask = null;
+            }
         }
 
-        [Obsolete]
-        /// This would/should be handled by gameloop
+        [Obsolete]        
         private void CleanUp()
         {
             _stream.Dispose();
             Mud.I.RemoveConnection(this);
         }
-
-        [Obsolete]
+        
         /// This code is moved to the game loop - connections will handle adding and removing things from their input/output buffers, but that's it.
         /// What shows up on the first connection is/should be handled by game loop
-        private void ClientLoop( )
+        public void SendWelcomeMessage()
         {
-            try
-            {
-                Mud.I.AddConnection( this );
-
-                //Ask for colors!
-                SendLine("Do you want to use ANSI colors? (y/n):");
-                var colorResponse = _reader.ReadLine( );
-                if ( !string.IsNullOrEmpty(colorResponse) && colorResponse.ToLower( ) == "y") { UseColors = true; }
-                //anything else is just no
-                else { UseColors = false; }
-
-                //Send the welcome message
-                var welcome = Mud.I.Helps.First( h => h.Keywords.ToLower( ).Contains( "welcome" ) );
-                SendLine( welcome.Contents );
-
-                while ( true )
-                {
-                    string line = _reader.ReadLine( );
-                    
-                    InputParser.Parse(this, line);
-                }
-            }
-            finally
-            {
-                CleanUp();
-            }
+            //Ask for colors!
+            SendLine("Do you want to use ANSI colors? (y/n):");            
         }
         
     }

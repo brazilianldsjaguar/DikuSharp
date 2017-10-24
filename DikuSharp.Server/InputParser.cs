@@ -23,13 +23,18 @@ namespace DikuSharp.Server
     //Main entry point for the server
     public static class InputParser
     {
-        public static void Parse( Connection connection, string line )
+        public static void Parse(Connection connection)
         {
+            if ( string.IsNullOrEmpty(connection.InputBuffer) ) { return; }
+            
+            var line = connection.InputBuffer;
             switch ( connection.ConnectionStatus )
             {
                 case ConnectionStatus.Connected:
-                    //They just connected, so they're putting in their username
-                    ParseUsername( connection, line );
+                    ParseColorChoice(connection, line);
+                    break;
+                case ConnectionStatus.PutInUsername:
+                    ParseUsername(connection, line);
                     break;
                 case ConnectionStatus.PutInPassword:
                     ParsePassword( connection, line );
@@ -52,6 +57,19 @@ namespace DikuSharp.Server
                     }
                     break;
             }
+        }
+
+        public static void ParseColorChoice(Connection connection, string line )
+        {   
+            if (!string.IsNullOrEmpty(line) && line.ToLower() == "y") { connection.UseColors = true; }
+            //anything else is just no
+            else { connection.UseColors = false; }
+
+            //Send the welcome message
+            var welcome = Mud.I.Helps.First(h => h.Keywords.ToLower().Contains("welcome"));
+            connection.SendLine(welcome.Contents);
+
+            connection.ConnectionStatus = ConnectionStatus.PutInUsername;
         }
 
         public static void ParseUsername( Connection connection, string line )
@@ -168,11 +186,7 @@ namespace DikuSharp.Server
                     var arg1 = JsValue.FromObject(engine, character);
                     var arg2 = JsValue.FromObject(engine, args);
                     var result = jsCmd.Invoke(arg1, arg2);
-
-                    //assuming this was all successful, show the prompt
-                    //tack the prompt onto the end of this.
-                    var prompt = Prompt.ParseTokens(character.Prompt ?? Prompt.PROMPT_DEFAULT, character);
-                    character.SendLine(prompt);
+                    
                     //TODO
                     //Do something better here - maybe something returned from the command to signal if another will need to be executed?
                     //or another way to force another command to happen
@@ -183,7 +197,7 @@ namespace DikuSharp.Server
                 }
                 catch( Exception ex )
                 {
-                    throw ex;
+                   throw ex;
                 }
 
 

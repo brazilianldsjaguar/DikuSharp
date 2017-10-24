@@ -79,8 +79,15 @@ namespace DikuSharp.Server
         public List<Help> Helps { get; private set; }
         public Engine Engine { get; private set; }
         public Room StartingRoom { get; private set; }
-            
+        public PlayerCharacter[] AllPlayers {  get { return Connections.Select(c => c.Value.CurrentCharacter).ToArray(); } }
+
+        private Task<TcpClient> holderClientTask;
+        private Random tickRandom;
         #endregion
+
+        const int PULSE_PER_SECOND = 4;
+        const int PULSE_TICK = 30 * PULSE_PER_SECOND;
+        const int PULSE_TRACK = 40 * PULSE_PER_SECOND;
 
         public void StartServer()
         {
@@ -111,6 +118,7 @@ namespace DikuSharp.Server
             Engine.SetValue("DO_COMMAND", new Action<PlayerCharacter, string>(InputParser.ParsePlaying));
             Engine.SetValue("__log", new Action<object>(Console.WriteLine));
             Engine.SetValue("ADMIN_RESTART", new Action(StartServer));
+            Engine.SetValue("MUD", this);
 
             //Calculate this just once...
             StartingRoom = Areas.First( a => a.Rooms.Exists( r => r.Vnum == Config.RoomVnumForNewPlayers ) )
@@ -135,54 +143,122 @@ namespace DikuSharp.Server
         }
 
         #region Game Loop
-        private Random _random = new Random();
-        private Timer _timer;
-        private void _timerCallback(object state)
-        {
-            DateTime runTime = DateTime.Now;
-            //AutoResetEvent ae = (AutoResetEvent)state;
-            var playingConnections = Connections.Values.Where(c => c.ConnectionStatus == ConnectionStatus.Playing);
-            foreach (var c in playingConnections)
-            {
-                var ch = c.CurrentCharacter;
-                var prompt = Prompt.ParseTokens(ch.Prompt ?? Prompt.PROMPT_DEFAULT, ch);
-                c.SendLine(prompt);
-            }
-            _timer.Change(_random.Next(3600, 3600 * 2), 0);
-        }
-
         /// <summary>
         /// Official starting point of the game.
         /// </summary>
         /// <param name="listener"></param>
-        public void StartGame(TcpListener listener)
+        public async Task StartGame(TcpListener listener)
         {
-            GameLoop(listener);
+            await GameLoop(listener);
         }
 
-        private void GameLoop(TcpListener listener)
+        private Task GameLoop(TcpListener listener)
         {
-            //_timer = new Timer(_timerCallback, null, 0, _random.Next(3600, 4800));
             bool mudRunning = true;
-            while (mudRunning)
+
+            DateTime lastTime = DateTime.Now;
+
+            tickRandom = new Random();
+            
+            try
             {
-                var client = listener.AcceptTcpClientAsync().Result;                
-                Connections.TryAdd(Guid.NewGuid(), new Connection(client));
-
-                //inputs
-                foreach( Connection connection in Connections.Values )
+                while (mudRunning)
                 {
-                    connection.Read();
+                    try
+                    {
+                        //New connections
+                        HandleNewClient(listener);
+
+                        //Clean up
+                        foreach (var conn in Mud.I.Connections.Values)
+                        {
+                            if (conn.)
+                        }
+
+                        //Input
+                        foreach (var conn in Mud.I.Connections.Values)
+                        {
+                            conn.Read();
+                            InputParser.Parse(conn);
+                        }
+
+                        //Autonomous game stuff
+                        Update();
+
+                        //Output
+                        foreach (var conn in Mud.I.Connections.Values)
+                        {
+                            OutputParser.Parse(conn);
+                            conn.Write();
+                        }
+
+                    }
+                    catch ( IOException io )
+                    {
+                    }
+
+                    //synchornize with the clock
+                    DateTime now = DateTime.Now;
+                    int msDelta = lastTime.Millisecond - now.Millisecond + 1000 / PULSE_PER_SECOND;
+                    int secDelta = lastTime.Second - now.Second;
+
+                    while(msDelta < 0)
+                    {
+                        msDelta += 1000;
+                        secDelta -= 1;
+                    }
+                    while(msDelta >= 1000)
+                    {
+                        msDelta -= 1000;
+                        secDelta += 1;
+                    }
+                    if (secDelta > 0 || (secDelta == 0 && msDelta > 0))
+                    {
+                        Thread.Sleep(new TimeSpan(0, 0, 0, secDelta, msDelta));
+                    }
+
+                    lastTime = DateTime.Now;
                 }
 
-                //outputs
-                foreach(Connection connection in Connections.Values)
-                {
-                    connection.Write();
-                }
+                return Task.CompletedTask;
+            }
+            catch( Exception ex)
+            {
+                return Task.FromException(ex);
             }
         }
 
+        private void HandleNewClient(TcpListener listener)
+        {
+            if ( holderClientTask == null )
+            {
+                holderClientTask = listener.AcceptTcpClientAsync();
+            }
+            
+            if ( holderClientTask.IsCompleted )
+            {
+                var connection = new Connection(holderClientTask.Result);
+                Mud.I.AddConnection(connection);
+                connection.SendWelcomeMessage();
+
+                //listen for a new one
+                holderClientTask = listener.AcceptTcpClientAsync();
+            }
+        }
+
+        /// <summary>
+        /// Main method to update mobs, rooms, objs, fighting, etc.
+        /// </summary>
+        private void Update()
+        {
+            //foreach( var area in Areas )
+            //{
+            //    foreach( var room in area.Rooms )
+            //    {
+            //        foreach( var mob in room.)
+            //    }
+            //}
+        }
         #endregion
 
         #region Reading from files
