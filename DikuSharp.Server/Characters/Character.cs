@@ -34,6 +34,17 @@ namespace DikuSharp.Server.Characters
         public int MovePoints { get; set; }
         [JsonProperty( "maxMovePoints" )]
         public int MaxMovePoints { get; set; }
+
+        //Stats!
+        [JsonProperty("strength")]
+        public int Strength { get; set; }
+        [JsonProperty("dexterity")]
+        public int Dexterity { get; set; }
+        [JsonProperty("intelligence")]
+        public int Intelligence { get; set; }
+        [JsonProperty("charisma")]
+        public int Charisma { get; set; }
+
         [JsonProperty("currentRoomVnum")]
         public long CurrentRoomVnum
         {
@@ -56,6 +67,14 @@ namespace DikuSharp.Server.Characters
         public int Mp { get { return ManaPoints; } set { ManaPoints = value; } }
         [JsonIgnore]
         public int Mv { get { return MovePoints;} set { MovePoints = value; } }
+        [JsonIgnore]
+        public int Str { get { return Strength; } set { Strength = value; } }
+        [JsonIgnore]
+        public int Dex { get { return Dexterity; } set { Dexterity = value; } }
+        [JsonIgnore]
+        public int Int { get { return Intelligence; } set { Intelligence = value; } }
+        [JsonIgnore]
+        public int Cha { get { return Charisma; } set { Charisma = value; } }
 
         #endregion
 

@@ -23,6 +23,9 @@
     "./_files/classes/warrior.json",
     "./_files/classes/mage.json"
   ],
+  "raceFiles": [
+    "./_files/races/human.json"
+  ],
   "accountFileRootDirectory": "_files/accounts",
   "helpFileDirectory": "_files/helps",
   "commandDirectory": "_files/commands",
@@ -51,11 +54,21 @@
       "level": 0,
       "priority": 1
     },
+
+    /*****************
+     *      INFO     *
+     *****************/
     {
       "name": "who",
-      "fileName": "who.js",
+      "fileName": "info/who.js",
       "level": 0,
-      "priority": 2
+      "priority": 200
+    },
+    {
+      "name": "score",
+      "fileName": "info/score.js",
+      "level": 0,
+      "priority": 200
     },
 
     /*****************

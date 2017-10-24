@@ -21,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="_files\races\human.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Jint" Version="2.11.23" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>
@@ -38,6 +42,10 @@
     <None Update="_files\helps\welcome.help">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="_files\classes\" />
   </ItemGroup>
 
 </Project>

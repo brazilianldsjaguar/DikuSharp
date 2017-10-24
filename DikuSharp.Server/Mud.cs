@@ -164,20 +164,37 @@ namespace DikuSharp.Server
             {
                 while (mudRunning)
                 {
-                    HandleNewClient(listener);
-
-                    foreach (var conn in Mud.I.Connections.Values)
+                    try
                     {
-                        conn.Read();
-                        InputParser.Parse(conn);
+                        //New connections
+                        HandleNewClient(listener);
+
+                        //Clean up
+                        foreach (var conn in Mud.I.Connections.Values)
+                        {
+                            if (conn.)
+                        }
+
+                        //Input
+                        foreach (var conn in Mud.I.Connections.Values)
+                        {
+                            conn.Read();
+                            InputParser.Parse(conn);
+                        }
+
+                        //Autonomous game stuff
+                        Update();
+
+                        //Output
+                        foreach (var conn in Mud.I.Connections.Values)
+                        {
+                            OutputParser.Parse(conn);
+                            conn.Write();
+                        }
+
                     }
-
-                    Update();
-
-                    foreach (var conn in Mud.I.Connections.Values)
+                    catch ( IOException io )
                     {
-                        OutputParser.Parse(conn);
-                        conn.Write();
                     }
 
                     //synchornize with the clock
@@ -234,7 +251,13 @@ namespace DikuSharp.Server
         /// </summary>
         private void Update()
         {
-
+            //foreach( var area in Areas )
+            //{
+            //    foreach( var room in area.Rooms )
+            //    {
+            //        foreach( var mob in room.)
+            //    }
+            //}
         }
         #endregion
 

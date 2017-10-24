@@ -104,10 +104,13 @@ namespace DikuSharp.Server
                     inputBuffer = null;
                 }
             }
-            catch( Exception io)
+            catch(IOException io)
             {
-                throw io;
+                //if this failed we'll just assume the client needs to be removed
+                Console.WriteLine(io.Message);
+                Mud.I.RemoveConnection(this);
             }
+            catch (Exception) { throw; } //throw everything else
             
         }
         

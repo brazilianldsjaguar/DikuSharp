@@ -21,8 +21,10 @@ namespace DikuSharp.Server.Config
         public Dictionary<string, string> Levels { get; set; }
         [JsonProperty( "roomVnumForNewPlayers" )]
         public int RoomVnumForNewPlayers { get; set; }
-        [ JsonProperty("areaFiles")]
+        [JsonProperty("areaFiles")]
         public List<string> AreaFiles { get; set; }
+        [JsonProperty("raceFiles")]
+        public List<string> RaceFiles { get; set; }
 
         [JsonProperty("classFiles")]
         public List<string> ClassFiles { get; set; }

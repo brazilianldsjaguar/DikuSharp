@@ -186,5 +186,53 @@ namespace DikuSharp.Server.Repositories
 
             return metaDatas.OrderBy( md => md.Priority ).ToList();
         }
+
+        /// <summary>
+        /// Loads races into memory.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public List<Race> LoadRaces(MudConfig config)
+        {
+            var races = new List<Race>();
+            foreach (var raceFile in config.RaceFiles)
+            {
+                var rawJson = File.ReadAllText(raceFile);
+                var race = JsonConvert.DeserializeObject<Race>(rawJson);
+                races.Add(race);
+            }
+            return races;
+        }
+
+        /// <summary>
+        /// Saves a collection of races to disk.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="races"></param>
+        public void SaveRaces(MudConfig config, List<Race> races)
+        {
+            foreach( var race in races )
+            {
+                SaveRace(config, race);
+            }
+        }
+
+        /// <summary>
+        /// Saves a race to disk, if it's been defined in config.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="race"></param>
+        public void SaveRace(MudConfig config, Race race)
+        {
+            string raceFile = config.RaceFiles.FirstOrDefault(r => r.EndsWith(race.Name.ToLower() + ".json"));
+            if ( string.IsNullOrEmpty(raceFile) )
+            {
+                throw new InvalidOperationException("Cannot find race to save. Add it to mud.config please.");
+            }
+            
+            var rawJson = JsonConvert.SerializeObject(race, new JsonSerializerSettings() { Formatting = Formatting.Indented });
+            File.WriteAllText(raceFile, rawJson);
+            
+        }
     }
 }
