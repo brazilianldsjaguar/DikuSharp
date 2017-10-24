@@ -1,48 +1,140 @@
 ﻿{
-    "mudName": "DikuSharp Server",
-    "version": 1.0,
-    "maxLevel": 11,
-    "levels": {
-        "1": 1000,
-        "2": 2000,
-        "3": 3000,
-        "4": 4000,
-        "5": 5000,
-        "6": 6000,
-        "7": 7000,
-        "8": 8000,
-        "9": 9000,
-        "10": 10000
+  "mudName": "DikuSharp Server",
+  "version": 1.0,
+  "portNumber": 4000,
+  "maxLevel": 100,
+  "levels": {
+    "1": 1000,
+    "2": 2000,
+    "3": 3000,
+    "4": 4000,
+    "5": 5000,
+    "6": 6000,
+    "7": 7000,
+    "8": 8000,
+    "9": 9000,
+    "10": 10000
+  },
+  "roomVnumForNewPlayers": 1,
+  "areaFiles": [
+    "./_files/areas/admin.json"
+  ],
+  "classFiles": [
+    "./_files/classes/warrior.json",
+    "./_files/classes/mage.json"
+  ],
+  "raceFiles": [
+    "./_files/races/human.json"
+  ],
+  "accountFileRootDirectory": "_files/accounts",
+  "helpFileDirectory": "_files/helps",
+  "commandDirectory": "_files/commands",
+  "commands": [
+    /*****************
+     *     ADMIN     *
+     ****************/
+    {
+      "name": "restart",
+      "fileName": "admin/restart.js",
+      "level": 1000,
+      "priority": 1
     },
-    "roomVnumForNewPlayers": 1,
-    "areaFiles": [
-        "./_files/areas/admin.json"
-    ],
-    "classFiles": [
-        "./_files/classes/warrior.json",
-        "./_files/classes/mage.json"
-    ],
-    "accountFileRootDirectory": "_files/accounts",
-    "helpFileDirectory": "_files/helps",
-    "commandDirectory": "_files/commands",
-    "commands": [
-        {
-            "name": "help",
-            "fileName": "help.js",
-            "level": 0,
-            "priority": 1
-        },
-        {
-            "name": "look",
-            "fileName": "look.js",
-            "level": 0,
-            "priority": 1
-        },
-        {
-            "name": "north",
-            "fileName": "north.js",
-            "level": 0,
-            "priority": 1
-        }
-    ] 
+    /*****************
+     *    COMMON     *
+     *****************/
+    {
+      "name": "help",
+      "fileName": "help.js",
+      "level": 0,
+      "priority": 1
+    },
+    {
+      "name": "look",
+      "fileName": "look.js",
+      "level": 0,
+      "priority": 1
+    },
+
+    /*****************
+     *      INFO     *
+     *****************/
+    {
+      "name": "who",
+      "fileName": "info/who.js",
+      "level": 0,
+      "priority": 200
+    },
+    {
+      "name": "score",
+      "fileName": "info/score.js",
+      "level": 0,
+      "priority": 200
+    },
+
+    /*****************
+     *   DIRECTIONS  *
+     *****************/
+    {
+      "name": "north",
+      "fileName": "dirs/north.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "south",
+      "fileName": "dirs/south.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "east",
+      "fileName": "dirs/east.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "west",
+      "fileName": "dirs/west.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "up",
+      "fileName": "dirs/up.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+    {
+      "name": "down",
+      "fileName": "dirs/down.js",
+      "level": 0,
+      "priority": 1,
+      "commandType": "Exit"
+    },
+
+    /*****************
+     * Communication *
+     *****************/
+    {
+      "name": "say",
+      "fileName": "communication/say.js",
+      "level": 0,
+      "priority": 1,
+      "aliases": [ "'" ],
+      "preserveQuotes": true
+    },
+    {
+      "name": "ooc",
+      "fileName": "communication/ooc.js",
+      "level": 0,
+      "priority": 1,
+      "aliases": [ "]" ],
+      "preserveQuotes": true
+    }
+  ]
 }

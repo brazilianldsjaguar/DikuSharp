@@ -7,12 +7,21 @@ using DikuSharp.Server.Commands;
 using DikuSharp.Server.Config;
 using DikuSharp.Server.Helps;
 using DikuSharp.Server.Models;
+using DikuSharp.Server.Extensions;
 using Newtonsoft.Json;
 
 namespace DikuSharp.Server.Repositories
 {
+    /// <summary>
+    /// Responsible for loading and saving data to/from the file system.
+    /// </summary>
     public class MudRepository
     {
+        /// <summary>
+        /// Loads all areas from the area-files list in mud.json
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
         public List<Area> LoadAreas( MudConfig config )
         {
             var areas = new List<Area>( );
@@ -20,11 +29,17 @@ namespace DikuSharp.Server.Repositories
             {
                 var rawJson = File.ReadAllText( areaFile );
                 var area = JsonConvert.DeserializeObject<Area>( rawJson );
+                area.Rooms.ForEach(r => r.Exits = r.Exits.OrderBy(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value));
                 areas.Add( area );
             }
             return areas;
         }
 
+        /// <summary>
+        /// Searches a configurable root directory for all .account files.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
         public List<PlayerAccount> LoadAccounts( MudConfig config )
         {
             var accounts = new List<PlayerAccount>( );
@@ -57,6 +72,11 @@ namespace DikuSharp.Server.Repositories
             return accounts;
         }
 
+        /// <summary>
+        /// Saves many accounts.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="accounts"></param>
         public void SaveAccounts( MudConfig config, List<PlayerAccount> accounts )
         {
             //don't need to check for dirs because we always LOAD first!
@@ -66,17 +86,27 @@ namespace DikuSharp.Server.Repositories
             }
         }
 
+        /// <summary>
+        /// Saves an account to a file.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="account"></param>
         public void SaveAccount( MudConfig config, PlayerAccount account )
         {
             //don't need to check for dirs because we always LOAD first!
             var root = config.AccountFileRootDirectory;
-            var fileName = account.Name[ 0 ].ToString( ).ToUpper( ) + account.Name.Substring( 1, account.Name.Length - 1 ).ToLower( ) + ".account";
-            var a = account.Name[ 0 ].ToString( ).ToUpper( );
+            var fileName = $"{account.Name.ToTitleCase()}.account";
+            var a = account.Name[0].ToString().ToUpper();
             var path = Path.Combine( root, a, fileName );
             var rawJson = JsonConvert.SerializeObject( account, new JsonSerializerSettings( ) { Formatting = Formatting.Indented } );
             File.WriteAllText( path, rawJson );
         }
 
+        /// <summary>
+        /// Loads all the help files from the file system.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
         public List<Help> LoadHelps( MudConfig config )
         {
             var helps = new List<Help>( );
@@ -106,6 +136,11 @@ namespace DikuSharp.Server.Repositories
             return helps;
         }
 
+        /// <summary>
+        /// Saves helps.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="helps"></param>
         public void SaveHelps( MudConfig config, List<Help> helps )
         {
             foreach(var help in helps)
@@ -114,6 +149,11 @@ namespace DikuSharp.Server.Repositories
             }
         }
 
+        /// <summary>
+        /// Save helps.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="help"></param>
         public void SaveHelp( MudConfig config, Help help )
         {
             var root = config.HelpFileDirectory;
@@ -145,6 +185,54 @@ namespace DikuSharp.Server.Repositories
             }
 
             return metaDatas.OrderBy( md => md.Priority ).ToList();
+        }
+
+        /// <summary>
+        /// Loads races into memory.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public List<Race> LoadRaces(MudConfig config)
+        {
+            var races = new List<Race>();
+            foreach (var raceFile in config.RaceFiles)
+            {
+                var rawJson = File.ReadAllText(raceFile);
+                var race = JsonConvert.DeserializeObject<Race>(rawJson);
+                races.Add(race);
+            }
+            return races;
+        }
+
+        /// <summary>
+        /// Saves a collection of races to disk.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="races"></param>
+        public void SaveRaces(MudConfig config, List<Race> races)
+        {
+            foreach( var race in races )
+            {
+                SaveRace(config, race);
+            }
+        }
+
+        /// <summary>
+        /// Saves a race to disk, if it's been defined in config.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="race"></param>
+        public void SaveRace(MudConfig config, Race race)
+        {
+            string raceFile = config.RaceFiles.FirstOrDefault(r => r.EndsWith(race.Name.ToLower() + ".json"));
+            if ( string.IsNullOrEmpty(raceFile) )
+            {
+                throw new InvalidOperationException("Cannot find race to save. Add it to mud.config please.");
+            }
+            
+            var rawJson = JsonConvert.SerializeObject(race, new JsonSerializerSettings() { Formatting = Formatting.Indented });
+            File.WriteAllText(raceFile, rawJson);
+            
         }
     }
 }

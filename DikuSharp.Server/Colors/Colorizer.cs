@@ -80,14 +80,14 @@ namespace DikuSharp.Server.Colors
                                 //Only add it if it's needed
                                 if ( last != j && useColor )
                                 {
-                                    bool sequence = false;
+                                    //bool sequence = false;
 
                                     output += "\x1B[38;5;";
 
-                                    if ( last == -1 || last / 2 != j / 2 )
-                                    {
-                                        sequence = true;
-                                    }
+                                    //if ( last == -1 || last / 2 != j / 2 )
+                                    //{
+                                    //    sequence = true;
+                                    //}
 
                                     //if ( bold && !Colors[ j ].IsBold )
                                     //{
@@ -108,10 +108,10 @@ namespace DikuSharp.Server.Colors
                                     //    }
                                     //}
 
-                                    if ( sequence )
-                                    {
+                                    //if ( sequence )
+                                    //{
                                         output += Colors[ j ].Code;
-                                    }
+                                    //}
 
                                     output += 'm';
                                 }

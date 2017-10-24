@@ -14,19 +14,27 @@ using DikuSharp.Server.Extensions;
 using Jint;
 using Jint.Native;
 using Jint.Runtime.Interop;
+using DikuSharp.Server.Models;
+using Newtonsoft.Json;
+using DikuSharp.Server.Enums;
 
 namespace DikuSharp.Server
 {
     //Main entry point for the server
     public static class InputParser
     {
-        public static void Parse( Connection connection, string line )
+        public static void Parse(Connection connection)
         {
+            if ( string.IsNullOrEmpty(connection.InputBuffer) ) { return; }
+            
+            var line = connection.InputBuffer;
             switch ( connection.ConnectionStatus )
             {
                 case ConnectionStatus.Connected:
-                    //They just connected, so they're putting in their username
-                    ParseUsername( connection, line );
+                    ParseColorChoice(connection, line);
+                    break;
+                case ConnectionStatus.PutInUsername:
+                    ParseUsername(connection, line);
                     break;
                 case ConnectionStatus.PutInPassword:
                     ParsePassword( connection, line );
@@ -49,6 +57,19 @@ namespace DikuSharp.Server
                     }
                     break;
             }
+        }
+
+        public static void ParseColorChoice(Connection connection, string line )
+        {   
+            if (!string.IsNullOrEmpty(line) && line.ToLower() == "y") { connection.UseColors = true; }
+            //anything else is just no
+            else { connection.UseColors = false; }
+
+            //Send the welcome message
+            var welcome = Mud.I.Helps.First(h => h.Keywords.ToLower().Contains("welcome"));
+            connection.SendLine(welcome.Contents);
+
+            connection.ConnectionStatus = ConnectionStatus.PutInUsername;
         }
 
         public static void ParseUsername( Connection connection, string line )
@@ -101,15 +122,20 @@ namespace DikuSharp.Server
                 connection.CurrentCharacter = choices[ choice ];
                 //find the room they quit in
                 var area = Mud.I.Areas.FirstOrDefault( a => a.Rooms.Exists( r => r.Vnum == connection.CurrentCharacter.CurrentRoomVnum ) );
-                if ( area == null ) { connection.CurrentCharacter.CurrentRoom = Mud.I.StartingRoom; }
-                else {
-                    var room = area.Rooms.FirstOrDefault( r => r.Vnum == connection.CurrentCharacter.CurrentRoomVnum );
-                    if ( room == null ) { connection.CurrentCharacter.CurrentRoom = Mud.I.StartingRoom; }
-                    else { connection.CurrentCharacter.CurrentRoom = room; }
+                Room room = Mud.I.StartingRoom;
+                if ( area != null )
+                {
+                    room = area.Rooms.FirstOrDefault( r => r.Vnum == connection.CurrentCharacter.CurrentRoomVnum );
+                    if ( room == null ) { room = Mud.I.StartingRoom; }
                 }
-
+                //assign the room to the player...
+                connection.CurrentCharacter.CurrentRoom = room;
+                //and the player to the room... (this will be removed when the player quits or moves)
+                room.AddCharacter(connection.CurrentCharacter);
 
                 connection.ConnectionStatus = ConnectionStatus.Playing;
+                //force the user to look
+                ParsePlaying(connection, "look");
             }
             else
             {
@@ -120,45 +146,58 @@ namespace DikuSharp.Server
 
         public static void ParsePlaying( Connection connection, string line )
         {
+            ParsePlaying(connection.CurrentCharacter, line);
+        }
+
+        public static void ParsePlaying(PlayerCharacter character, string line )
+        {
             if ( string.IsNullOrWhiteSpace(line))
             {
                 return;
             }
 
-            var split = _getArgsFromInput( line, ' ' );
-            //break out spaces first
-            var cmd = split[ 0 ].ToLower();
-            object[] args = split.Skip( 1 ).Select( s => (object)s ).ToArray();
-
-            //find similar commands
-            var command = Mud.I.Commands.FirstOrDefault( c => c.Name.ToLower( ).StartsWith( cmd ) );
+            //split the line to find a command and all arguments
+            var cmdAndArgs = _getCommandAndArgsFromInput( line );
+            var cmd = cmdAndArgs.Item1.ToLower();
+            
+            //attempt to find the command
+            var command = Mud.I.Commands.FirstOrDefault(c => c.Name.ToLower().StartsWith(cmd))
+                    ?? Mud.I.Commands.FirstOrDefault(c => c.Aliases?.FirstOrDefault(a => a.ToLower().StartsWith(cmd)) != null);
 
             if ( command == null )
             {
-                connection.SendLine("Huh?");
+                character.SendLine("Huh?");
             }
-            else if ( command.Level > connection.CurrentCharacter.Level )
+            else if ( command.Level > character.Level )
             {
-                connection.SendLine( "Huh?" );
+                character.SendLine( "Huh?" );
             }
             else
             {
                 try
                 {
+                    //now parse the args, honoring quotes if necessary
+                    var args = _parseArgs(cmdAndArgs.Item2, command.PreserveQuotes, ' ').ToArray();
+
                     //do it!
-                    var engine = new Engine( );
-                    engine.SetValue( "__log", new Action<object>( Console.WriteLine ) );
-                    engine.SetValue( "HELPS", Mud.I.Helps.ToArray( ) );
-                    engine.SetValue( "EXITS", connection.CurrentCharacter.CurrentRoom.Exits.Select( x => new { name = x.Key, vnum = x.Value.DestinationVnum } ).ToArray() );
-                    //engine.SetValue( "CONNECTIONS", Mud.I.Connections );
+                    var engine = Mud.I.Engine;                    
                     engine.Execute( command.RawJavascript );
                     var jsCmd = engine.GetValue( command.Name );
-                    var result = jsCmd.Invoke( JsValue.FromObject( engine, connection.CurrentCharacter ), JsValue.FromObject( engine, args ) );
-                    //engine.Invoke( command.Name, connection, args );
+                    var arg1 = JsValue.FromObject(engine, character);
+                    var arg2 = JsValue.FromObject(engine, args);
+                    var result = jsCmd.Invoke(arg1, arg2);
+                    
+                    //TODO
+                    //Do something better here - maybe something returned from the command to signal if another will need to be executed?
+                    //or another way to force another command to happen
+                    //if (command.CommandType == CommandType.Exit)
+                    //{
+                    //    ParsePlaying(connection, "look");
+                    //}
                 }
                 catch( Exception ex )
                 {
-                    throw ex;
+                   throw ex;
                 }
 
 
@@ -191,7 +230,28 @@ namespace DikuSharp.Server
             //}
         }
         
-        private static List<string> _getArgsFromInput( string stringToSplit, params char[] delimiters )
+        private static Tuple<string, string> _getCommandAndArgsFromInput(string line)
+        {
+
+            string cmd = null;
+            string args = null;
+            //We need to handle some special aliases (e.g. 'hello = "say hello")
+            if (line[0] == '\'' || line[0] == ']')
+            {
+                cmd = line[0].ToString();
+                args = new string(line.Skip(1).ToArray());
+            }
+            else
+            {
+                //now handle space
+                var parts = line.Split(' ');
+                cmd = parts[0];
+                args = string.Join(" ", parts.Skip(1)); //this preserves the args for later processing
+            }
+
+            return new Tuple<string, string>(cmd, args);
+        }
+        private static List<string> _parseArgs( string args, bool preserveQuotes, params char[] delimiters )
         {
             /*
              * Parse '' quotes (i.e. cast 'magic missile' <person>) - used for multi-word arguments
@@ -200,13 +260,14 @@ namespace DikuSharp.Server
              * http://stackoverflow.com/questions/554013/regular-expression-to-split-on-spaces-unless-in-quotes
              */
             List<string> results = new List<string>( );
-
+            
+            //check to see if there's an even number of quotes.
             bool inQuote = false;
             StringBuilder currentToken = new StringBuilder( );
-            for ( int index = 0; index < stringToSplit.Length; ++index )
+            for ( int index = 0; index < args.Length; ++index )
             {
-                char currentCharacter = stringToSplit[ index ];
-                if ( currentCharacter == '\'' )
+                char currentCharacter = args[ index ];
+                if ( currentCharacter == '\'' && !preserveQuotes )
                 {
                     // When we see a ", we need to decide whether we are
                     // at the start or send of a quoted section...

@@ -20,6 +20,12 @@ namespace DikuSharp.Server.Models
         public Dictionary<string,Exit> Exits { get; set; }
         #endregion
 
+        public Room()
+        {
+            Players = new List<PlayerCharacter>();
+            Mobs = new List<NonPlayerCharacter>();
+        }
+
         [JsonIgnore]
         public List<PlayerCharacter> Players { get; set; }
         [JsonIgnore]
@@ -33,6 +39,18 @@ namespace DikuSharp.Server.Models
                 var mobs = Mobs.Select( m => m as Character );
                 return players.Concat( mobs ).ToList( );
             }
+        }
+        
+        public void AddCharacter(Character character)
+        {
+            if ( character is PlayerCharacter ) { Players.Add(character as PlayerCharacter); }
+            else if (character is NonPlayerCharacter ) { Mobs.Add(character as NonPlayerCharacter); }
+        }
+
+        public void RemoveCharacter(Character character)
+        {
+            if (character is PlayerCharacter) { Players.Remove(character as PlayerCharacter); }
+            else if (character is NonPlayerCharacter) { Mobs.Remove(character as NonPlayerCharacter); }
         }
 
     }

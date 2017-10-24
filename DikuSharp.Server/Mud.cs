@@ -15,6 +15,7 @@ using DikuSharp.Server.Helps;
 using DikuSharp.Server.Models;
 using DikuSharp.Server.Repositories;
 using Newtonsoft.Json;
+using Jint;
 
 namespace DikuSharp.Server
 {
@@ -52,9 +53,7 @@ namespace DikuSharp.Server
         private Mud( )
         {
             Connections = new ConcurrentDictionary<Guid,Connection>();
-            Config = _getMudConfigFromFile( );
             Repo = new MudRepository();
-            GameLoop( );
         }
         #endregion
 
@@ -78,12 +77,24 @@ namespace DikuSharp.Server
         private List<Room> _allRooms = null;
         public List<PlayerAccount> Accounts { get; private set; }
         public List<Help> Helps { get; private set; }
+        public Engine Engine { get; private set; }
         public Room StartingRoom { get; private set; }
-            
+        public PlayerCharacter[] AllPlayers {  get { return Connections.Select(c => c.Value.CurrentCharacter).ToArray(); } }
+
+        private Task<TcpClient> holderClientTask;
+        private Random tickRandom;
         #endregion
 
-        public void Start()
+        const int PULSE_PER_SECOND = 4;
+        const int PULSE_TICK = 30 * PULSE_PER_SECOND;
+        const int PULSE_TRACK = 40 * PULSE_PER_SECOND;
+
+        public void StartServer()
         {
+            //load the config first...
+            Config = _getMudConfigFromFile();
+
+
             //get things started
             //load up the areas...
             Console.WriteLine("Loading areas...");
@@ -97,6 +108,17 @@ namespace DikuSharp.Server
 
             Console.WriteLine("Loading command files...");
             Commands = Repo.LoadCommands( Config );
+
+            Console.WriteLine("Prepping JInt environment...");
+            Engine = new Engine(cfg => {
+                cfg.DebugMode();
+               // cfg.AddObjectConverter(new PlayerCharacterConverter()); //From Character to JsValue
+                });
+            Engine.SetValue("HELPS", Helps.ToArray());
+            Engine.SetValue("DO_COMMAND", new Action<PlayerCharacter, string>(InputParser.ParsePlaying));
+            Engine.SetValue("__log", new Action<object>(Console.WriteLine));
+            Engine.SetValue("ADMIN_RESTART", new Action(StartServer));
+            Engine.SetValue("MUD", this);
 
             //Calculate this just once...
             StartingRoom = Areas.First( a => a.Rooms.Exists( r => r.Vnum == Config.RoomVnumForNewPlayers ) )
@@ -121,20 +143,122 @@ namespace DikuSharp.Server
         }
 
         #region Game Loop
-
-        private void GameLoop()
+        /// <summary>
+        /// Official starting point of the game.
+        /// </summary>
+        /// <param name="listener"></param>
+        public async Task StartGame(TcpListener listener)
         {
-            Timer timer = new Timer((state) =>
-            {
-                var playingConnections = Connections.Values.Where( c => c.ConnectionStatus == ConnectionStatus.Playing );
-                foreach ( var c in playingConnections )
-                {
-                    c.SendLine( "A big haboob blows by..." );
-                }
-            }, new { t = false }, 0, 3600 );
-
+            await GameLoop(listener);
         }
 
+        private Task GameLoop(TcpListener listener)
+        {
+            bool mudRunning = true;
+
+            DateTime lastTime = DateTime.Now;
+
+            tickRandom = new Random();
+            
+            try
+            {
+                while (mudRunning)
+                {
+                    try
+                    {
+                        //New connections
+                        HandleNewClient(listener);
+
+                        //Clean up
+                        foreach (var conn in Mud.I.Connections.Values)
+                        {
+                            if (conn.)
+                        }
+
+                        //Input
+                        foreach (var conn in Mud.I.Connections.Values)
+                        {
+                            conn.Read();
+                            InputParser.Parse(conn);
+                        }
+
+                        //Autonomous game stuff
+                        Update();
+
+                        //Output
+                        foreach (var conn in Mud.I.Connections.Values)
+                        {
+                            OutputParser.Parse(conn);
+                            conn.Write();
+                        }
+
+                    }
+                    catch ( IOException io )
+                    {
+                    }
+
+                    //synchornize with the clock
+                    DateTime now = DateTime.Now;
+                    int msDelta = lastTime.Millisecond - now.Millisecond + 1000 / PULSE_PER_SECOND;
+                    int secDelta = lastTime.Second - now.Second;
+
+                    while(msDelta < 0)
+                    {
+                        msDelta += 1000;
+                        secDelta -= 1;
+                    }
+                    while(msDelta >= 1000)
+                    {
+                        msDelta -= 1000;
+                        secDelta += 1;
+                    }
+                    if (secDelta > 0 || (secDelta == 0 && msDelta > 0))
+                    {
+                        Thread.Sleep(new TimeSpan(0, 0, 0, secDelta, msDelta));
+                    }
+
+                    lastTime = DateTime.Now;
+                }
+
+                return Task.CompletedTask;
+            }
+            catch( Exception ex)
+            {
+                return Task.FromException(ex);
+            }
+        }
+
+        private void HandleNewClient(TcpListener listener)
+        {
+            if ( holderClientTask == null )
+            {
+                holderClientTask = listener.AcceptTcpClientAsync();
+            }
+            
+            if ( holderClientTask.IsCompleted )
+            {
+                var connection = new Connection(holderClientTask.Result);
+                Mud.I.AddConnection(connection);
+                connection.SendWelcomeMessage();
+
+                //listen for a new one
+                holderClientTask = listener.AcceptTcpClientAsync();
+            }
+        }
+
+        /// <summary>
+        /// Main method to update mobs, rooms, objs, fighting, etc.
+        /// </summary>
+        private void Update()
+        {
+            //foreach( var area in Areas )
+            //{
+            //    foreach( var room in area.Rooms )
+            //    {
+            //        foreach( var mob in room.)
+            //    }
+            //}
+        }
         #endregion
 
         #region Reading from files

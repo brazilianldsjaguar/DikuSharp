@@ -15,15 +15,13 @@
     <Content Include="_files\accounts\readme.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="_files\commands\help.js">
+    <Content Include="_files\commands\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="_files\commands\look.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="_files\commands\north.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="_files\races\human.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,6 +42,10 @@
     <None Update="_files\helps\welcome.help">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="_files\classes\" />
   </ItemGroup>
 
 </Project>

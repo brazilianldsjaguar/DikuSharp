@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Jint.Runtime.Interop;
+using Jint.Native;
 
 namespace DikuSharp.Server.Characters
 {
@@ -14,6 +16,8 @@ namespace DikuSharp.Server.Characters
 
         [JsonProperty("experiencePoints")]
         public int ExperiencePoints { get; set; }
+        [JsonProperty("prompt")]
+        public Prompt Prompt { get; set; }
 
         /// <summary>
         /// Gets or sets the xp. Alias for <see cref="ExperiencePoints"/>.
@@ -32,6 +36,11 @@ namespace DikuSharp.Server.Characters
         public void SendLine( string message )
         {
             CurrentConnection.SendLine( message );
+        }
+
+        public void SendFormatLine( string formatMessage, params object[] args)
+        {
+            CurrentConnection.SendLine(formatMessage, true, args);
         }
 
     }
