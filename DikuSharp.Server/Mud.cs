@@ -211,8 +211,9 @@ namespace DikuSharp.Server
                         }
 
                     }
-                    catch (IOException)
+                    catch (IOException io)
                     {
+                        var i = io;
                     }
 
                     //synchornize with the clock

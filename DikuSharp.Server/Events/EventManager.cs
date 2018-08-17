@@ -14,7 +14,7 @@ namespace DikuSharp.Server.Events
         private List<MudEvent>[] eventQueueBuckets;
         private int currentEventQueueBucket = 0;
         private Random rand;
-        
+
         public EventManager()
         {
             rand = new Random();
@@ -44,7 +44,7 @@ namespace DikuSharp.Server.Events
             };
             AddGameEvent(e, 15 * Mud.PULSE_PER_SECOND);
 
-            foreach( var area in Mud.I.Areas )
+            foreach (var area in Mud.I.Areas)
             {
                 e = new MudEvent
                 {
@@ -61,7 +61,7 @@ namespace DikuSharp.Server.Events
         public void Heartbeat()
         {
             currentEventQueueBucket = (currentEventQueueBucket + 1) % MAX_EVENT_HASH;
-
+            Console.WriteLine($"Current Event Queue Bucket: {currentEventQueueBucket}");
             foreach (var e in eventQueueBuckets[currentEventQueueBucket])
             {
                 //if we haven't gotten passes down to 0 yet, the event is not ready to fire.
@@ -199,7 +199,7 @@ namespace DikuSharp.Server.Events
         bool AreaReset(MudEvent e)
         {
             Area area;
-            if ( (area = e.Area) == null )
+            if ((area = e.Area) == null)
             {
                 return false;
             }

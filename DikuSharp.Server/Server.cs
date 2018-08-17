@@ -12,15 +12,16 @@ namespace DikuSharp.Server
     class Server
     {
         private static TcpListener _listener;
-        
+
         /// <summary>
         /// Entry point of the server.
         /// </summary>
         /// <param name="args">The arguments.</param>
-        static void Main( string[ ] args )
+        static void Main(string[] args)
         {
+
             //Start up the Mud...
-            Mud.I.StartServer( );
+            Mud.I.StartServer();
             //Listen on the network...
             _listener = new TcpListener(IPAddress.Any, Mud.I.Config.PortNumber);
             _listener.Start();
@@ -32,13 +33,13 @@ namespace DikuSharp.Server
                     await Mud.I.StartGame(_listener);
                 }).GetAwaiter().GetResult();
             }
-            catch ( Exception ex )
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-            
+
             //if we're here, we're done and we need to stop listening
-            _listener.Stop();            
+            _listener.Stop();
         }
     }
 }
