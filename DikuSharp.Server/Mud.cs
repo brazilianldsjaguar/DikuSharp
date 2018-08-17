@@ -28,7 +28,7 @@ namespace DikuSharp.Server
         /// <summary>
         /// The lazy-loaded Mud singleton class
         /// </summary>
-        private static readonly Lazy<Mud> Lazy = new Lazy<Mud>( ( ) => new Mud( ) );
+        private static readonly Lazy<Mud> Lazy = new Lazy<Mud>(() => new Mud());
 
         /// <summary>
         /// Gets the instance.
@@ -51,9 +51,9 @@ namespace DikuSharp.Server
         /// <summary>
         /// Prevents a default instance of the <see cref="Mud"/> class from being created.
         /// </summary>
-        private Mud( )
+        private Mud()
         {
-            Connections = new ConcurrentDictionary<Guid,Connection>();
+            Connections = new ConcurrentDictionary<Guid, Connection>();
             Repo = new MudRepository();
             EventManager = new EventManager();
         }
@@ -62,16 +62,16 @@ namespace DikuSharp.Server
         #region Properties
         public MudRepository Repo { get; set; }
         public MudConfig Config { get; set; }
-        public ConcurrentDictionary<Guid,Connection> Connections { get; private set; }
+        public ConcurrentDictionary<Guid, Connection> Connections { get; private set; }
         public List<CommandMetaData> Commands { get; private set; }
         public List<Area> Areas { get; private set; }
         public List<Room> AllRooms
         {
             get
             {
-                if ( _allRooms == null && Areas != null && Areas.All(a=>a.Rooms != null))
+                if (_allRooms == null && Areas != null && Areas.All(a => a.Rooms != null))
                 {
-                    _allRooms = Areas.SelectMany( a => a.Rooms ).ToList( );
+                    _allRooms = Areas.SelectMany(a => a.Rooms).ToList();
                 }
                 return _allRooms;
             }
@@ -81,7 +81,7 @@ namespace DikuSharp.Server
         public List<Help> Helps { get; private set; }
         public Engine Engine { get; private set; }
         public Room StartingRoom { get; private set; }
-        public PlayerCharacter[] AllPlayers {  get { return Connections.Select(c => c.Value.CurrentCharacter).ToArray(); } }
+        public PlayerCharacter[] AllPlayers { get { return Connections.Select(c => c.Value.CurrentCharacter).ToArray(); } }
 
         /// <summary>
         /// Core event manager for the MUD.
@@ -109,22 +109,23 @@ namespace DikuSharp.Server
             //get things started
             //load up the areas...
             Console.WriteLine("Loading areas...");
-            Areas = Repo.LoadAreas( Config );
+            Areas = Repo.LoadAreas(Config);
 
             Console.WriteLine("Loading accounts...");
-            Accounts = Repo.LoadAccounts( Config );
+            Accounts = Repo.LoadAccounts(Config);
 
             Console.WriteLine("Loading help files...");
-            Helps = Repo.LoadHelps( Config );
+            Helps = Repo.LoadHelps(Config);
 
             Console.WriteLine("Loading command files...");
-            Commands = Repo.LoadCommands( Config );
+            Commands = Repo.LoadCommands(Config);
 
             Console.WriteLine("Prepping JInt environment...");
-            Engine = new Engine(cfg => {
+            Engine = new Engine(cfg =>
+            {
                 cfg.DebugMode();
-               // cfg.AddObjectConverter(new PlayerCharacterConverter()); //From Character to JsValue
-                });
+                // cfg.AddObjectConverter(new PlayerCharacterConverter()); //From Character to JsValue
+            });
             Engine.SetValue("HELPS", Helps.ToArray());
             Engine.SetValue("DO_COMMAND", new Action<PlayerCharacter, string>(InputParser.ParsePlaying));
             Engine.SetValue("__log", new Action<object>(Console.WriteLine));
@@ -135,25 +136,25 @@ namespace DikuSharp.Server
             EventManager.Initialize();
 
             //Calculate this just once...
-            StartingRoom = Areas.First( a => a.Rooms.Exists( r => r.Vnum == Config.RoomVnumForNewPlayers ) )
-                    .Rooms.First( r => r.Vnum == Config.RoomVnumForNewPlayers );
-            
+            StartingRoom = Areas.First(a => a.Rooms.Exists(r => r.Vnum == Config.RoomVnumForNewPlayers))
+                    .Rooms.First(r => r.Vnum == Config.RoomVnumForNewPlayers);
+
         }
-    
-        
+
+
         /// <summary>
         /// Adds a connection to the mud
         /// </summary>
         /// <param name="connection">The connection.</param>
-        public void AddConnection( Connection connection )
+        public void AddConnection(Connection connection)
         {
-            Connections.TryAdd( connection.ConnectionId, connection );
+            Connections.TryAdd(connection.ConnectionId, connection);
         }
 
-        public void RemoveConnection( Connection connection )
+        public void RemoveConnection(Connection connection)
         {
             Connection value;
-            Connections.TryRemove( connection.ConnectionId, out value );
+            Connections.TryRemove(connection.ConnectionId, out value);
         }
 
         #region Game Loop
@@ -210,7 +211,7 @@ namespace DikuSharp.Server
                         }
 
                     }
-                    catch ( IOException io )
+                    catch (IOException)
                     {
                     }
 
@@ -219,12 +220,12 @@ namespace DikuSharp.Server
                     int msDelta = lastTime.Millisecond - now.Millisecond + 1000 / PULSE_PER_SECOND;
                     int secDelta = lastTime.Second - now.Second;
 
-                    while(msDelta < 0)
+                    while (msDelta < 0)
                     {
                         msDelta += 1000;
                         secDelta -= 1;
                     }
-                    while(msDelta >= 1000)
+                    while (msDelta >= 1000)
                     {
                         msDelta -= 1000;
                         secDelta += 1;
@@ -239,7 +240,7 @@ namespace DikuSharp.Server
 
                 return Task.CompletedTask;
             }
-            catch( Exception ex)
+            catch (Exception ex)
             {
                 return Task.FromException(ex);
             }
@@ -247,12 +248,12 @@ namespace DikuSharp.Server
 
         private void HandleNewClient(TcpListener listener)
         {
-            if ( newClientTask == null )
+            if (newClientTask == null)
             {
                 newClientTask = listener.AcceptTcpClientAsync();
             }
-            
-            if ( newClientTask.IsCompleted )
+
+            if (newClientTask.IsCompleted)
             {
                 var connection = new Connection(newClientTask.Result);
                 Mud.I.AddConnection(connection);
@@ -266,11 +267,11 @@ namespace DikuSharp.Server
 
         #region Reading from files
 
-        
+
         public MudConfig _getMudConfigFromFile()
         {
-            var rawJson = File.ReadAllText( "mud.json" );
-            var mudConfig = JsonConvert.DeserializeObject<MudConfig>( rawJson );
+            var rawJson = File.ReadAllText("mud.json");
+            var mudConfig = JsonConvert.DeserializeObject<MudConfig>(rawJson);
             return mudConfig;
         }
 

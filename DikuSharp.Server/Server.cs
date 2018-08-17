@@ -25,10 +25,20 @@ namespace DikuSharp.Server
             _listener = new TcpListener(IPAddress.Any, Mud.I.Config.PortNumber);
             _listener.Start();
 
-            Task.Run(async () =>
+            try
             {
-                await Mud.I.StartGame(_listener);
-            }).GetAwaiter().GetResult();
+                Task.Run(async () =>
+                {
+                    await Mud.I.StartGame(_listener);
+                }).GetAwaiter().GetResult();
+            }
+            catch ( Exception ex )
+            {
+                Console.WriteLine(ex.Message);
+            }
+            
+            //if we're here, we're done and we need to stop listening
+            _listener.Stop();            
         }
     }
 }
