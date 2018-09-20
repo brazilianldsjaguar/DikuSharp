@@ -17,7 +17,6 @@ namespace DikuSharp.Server.Events
         public EventType EventType { get; set; }
         public EventOwnerType OwnerType { get; set; }
         public object Owner { get; set; }
-        public int Bucket { get; set; }
 
         public Area Area => Owner as Area;
         public Character Character => Owner as Character;

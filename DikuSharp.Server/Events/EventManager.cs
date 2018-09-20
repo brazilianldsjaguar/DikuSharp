@@ -8,23 +8,16 @@ namespace DikuSharp.Server.Events
 {
     public class EventManager
     {
-        const int MAX_EVENT_HASH = 128;
-
         private List<MudEvent> globalEventQueue;
-        private List<MudEvent>[] eventQueueBuckets;
-        private int currentEventQueueBucket = 0;
+        private List<MudEvent> eventQueueBucket;
         private Random rand;
 
         public EventManager()
         {
             rand = new Random();
 
-            //initialize the differnet 'buckets'
-            eventQueueBuckets = new List<MudEvent>[MAX_EVENT_HASH];
-            for (var i = 0; i < MAX_EVENT_HASH; i++)
-            {
-                eventQueueBuckets[i] = new List<MudEvent>();
-            }
+            //initialize the big bucket
+            eventQueueBucket = new List<MudEvent>();
 
             //ths is used for game-wide events (i.e. EventOwner = Game)
             globalEventQueue = new List<MudEvent>();
@@ -60,10 +53,11 @@ namespace DikuSharp.Server.Events
         /// </summary>
         public void Heartbeat()
         {
-            currentEventQueueBucket = (currentEventQueueBucket + 1) % MAX_EVENT_HASH;
-            Console.WriteLine($"Current Event Queue Bucket: {currentEventQueueBucket}");
-            foreach (var e in eventQueueBuckets[currentEventQueueBucket])
+            //Prefer for-loop to avoid iterating over a changing list
+            for (int i = 0; i < eventQueueBucket.Count; i++)
             {
+                var e = eventQueueBucket[i];
+
                 //if we haven't gotten passes down to 0 yet, the event is not ready to fire.
                 if (e.Passes-- > 0) { continue; }
 
@@ -86,13 +80,9 @@ namespace DikuSharp.Server.Events
 
             if (game_pulses < 1) { game_pulses = 1; }
 
-            int bucket = (game_pulses + currentEventQueueBucket) % MAX_EVENT_HASH;
-            int passes = game_pulses / MAX_EVENT_HASH;
+            e.Passes = game_pulses;
 
-            e.Bucket = bucket;
-            e.Passes = passes;
-
-            eventQueueBuckets[bucket].Add(e);
+            eventQueueBucket.Add(e);
 
             return true;
         }
@@ -106,7 +96,7 @@ namespace DikuSharp.Server.Events
         {
             if (dequeueFromBuckets)
             {
-                eventQueueBuckets[e.Bucket].Remove(e);
+                eventQueueBucket.Remove(e);
             }
 
             switch (e.OwnerType)
